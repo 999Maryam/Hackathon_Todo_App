@@ -1,7 +1,8 @@
 """FastAPI dependencies for authentication and request context."""
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer
+from starlette.requests import Request
 import jwt
 from datetime import datetime, timedelta
 
@@ -10,11 +11,11 @@ from app.config import settings
 security = HTTPBearer()
 
 
-def current_user(credentials: HTTPAuthCredentials = Depends(security)) -> str:
+def current_user(request: Request) -> str:
     """Dependency to extract and verify JWT token from Authorization header.
 
     Args:
-        credentials: HTTP Bearer credentials from FastAPI security.
+        request: FastAPI request object containing headers.
 
     Returns:
         str: The user_id from the JWT token.
@@ -22,7 +23,15 @@ def current_user(credentials: HTTPAuthCredentials = Depends(security)) -> str:
     Raises:
         HTTPException: 401 if token is missing, invalid, or expired.
     """
-    token = credentials.credentials
+    auth_header = request.headers.get("authorization", "")
+
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Missing or invalid authentication token",
+        )
+
+    token = auth_header[7:]  # Remove "Bearer " prefix
 
     try:
         payload = jwt.decode(

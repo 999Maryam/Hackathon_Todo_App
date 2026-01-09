@@ -1,32 +1,13 @@
-# Core Web Framework
-fastapi>=0.100.0
-uvicorn[standard]>=0.20.0
-pydantic>=2.0
-pydantic-settings>=2.0
-
-# Database
-sqlmodel>=0.0.14
-sqlalchemy>=2.0
-psycopg2-binary>=2.9.0
-alembic>=1.12.0
-
-# Authentication
-PyJWT>=2.8.0
-python-multipart>=0.0.5
-
-# Testing
-pytest>=7.0
-pytest-cov>=4.0
-httpx>=0.24.0
-
-# Environment
-python-dotenv>=1.0
-
-# Code Quality (Optional but recommended)
-black>=23.0
-flake8>=6.0
-isort>=5.12
-mypy>=1.0
-
-# Utilities
-python-dateutil>=2.8
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+sqlmodel==0.0.16
+pyjwt[crypto]==2.8.0
+bcrypt==4.0.1
+python-multipart==0.0.6
+python-dotenv==1.0.0
+better-exceptions==0.3.3
+passlib[bcrypt]==1.7.4
+pytest==7.4.3
+httpx==0.25.2

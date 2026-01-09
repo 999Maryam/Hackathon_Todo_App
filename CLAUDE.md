@@ -1,8 +1,8 @@
 # Claude Code Rules
 
-This file is generated during init for the selected agent.
+This file is customized for the Todo App project with specific agent guidance and tech stack.
 
-You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architext to build products.
+You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architect to build products using the Agentic Dev Stack workflow.
 
 ## Task context
 
@@ -206,5 +206,50 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 - `history/adr/` — Architecture Decision Records
 - `.specify/` — SpecKit Plus templates and scripts
 
-## Code Standards
+## Project-Specific: Agentic Dev Stack & Technology
+
+### Workflow: Spec → Plan → Tasks → Implement
+This project follows the Agentic Dev Stack approach:
+1. **Spec Phase** - Define requirements and acceptance criteria
+2. **Plan Phase** - Architecture and technical decisions
+3. **Tasks Phase** - Break into testable, actionable items
+4. **Implement Phase** - Execute via specialized agents (no manual coding)
+
+### Technology Stack & Agent Mapping
+
+| Layer | Technology | Agent | Key Points |
+|-------|-----------|-------|-----------|
+| **Frontend** | Next.js 16+ (App Router) | `frontend-responsive-nextjs` | Responsive, mobile-first, semantic HTML, accessibility |
+| **Backend** | Python FastAPI | `fastapi-backend-dev` | RESTful endpoints, Pydantic validation, JWT auth |
+| **Database** | Neon Serverless PostgreSQL + SQLModel | `neon-db-ops` | Schema design, query optimization, migrations |
+| **Authentication** | Better Auth + JWT | `auth-security-manager` | Signup/signin, token issuance, verification |
+
+### Key Integration: Better Auth + JWT Flow
+```
+User logs in (Frontend)
+  → Better Auth creates session & JWT token
+  → Frontend stores token in HTTP-only cookie or localStorage
+  → Frontend includes Authorization: Bearer <token> in API calls
+  → FastAPI extracts & verifies JWT using shared secret
+  → Backend decodes token to get user ID
+  → API filters data by user (multi-tenant via JWT user_id)
+```
+
+### Agent Invocation Guidelines
+- **Auth Setup**: Use `auth-security-manager` for signup/login/JWT implementation
+- **Frontend Pages**: Use `frontend-responsive-nextjs` for UI components and layouts
+- **Database Schema**: Use `neon-db-ops` for schema design, indexing, migrations
+- **API Development**: Use `fastapi-backend-dev` for endpoint design, validation, optimization
+- **Full-Stack Tasks**: Coordinate multiple agents; delegate by layer
+
+### Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- TypeScript 5.0+, Next.js 16+ with App Router + Next.js, React, Tailwind CSS, Better Auth, SWR, React Hook Form, react-hot-toast (001-todo-frontend-ui)
+- N/A (frontend only - consumes backend API) (001-todo-frontend-ui)
+- Python 3.11, TypeScript 5.0+, Next.js 16+ + Better Auth (with JWT plugin), FastAPI, PyJWT, SQLModel, Next.js App Router (001-auth-security)
+- Neon Serverless PostgreSQL (via SQLModel ORM) (001-auth-security)
+
+## Recent Changes
+- 001-todo-frontend-ui: Added TypeScript 5.0+, Next.js 16+ with App Router + Next.js, React, Tailwind CSS, Better Auth, SWR, React Hook Form, react-hot-toast
