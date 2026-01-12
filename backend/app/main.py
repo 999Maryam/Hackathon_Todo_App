@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
@@ -48,8 +49,27 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # CORS Configuration
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",  # Frontend dev
+            "https://your-app.vercel.app"  # Frontend prod
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     # Include routes
     app.include_router(router)
+
+    # Include auth routes
+    try:
+        from app.api.auth_routes import auth_router
+        app.include_router(auth_router)
+    except ImportError as e:
+        logger.warning(f"Could not import auth routes: {e}")
 
     # Global exception handlers
     @app.exception_handler(RequestValidationError)

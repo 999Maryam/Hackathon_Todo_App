@@ -19,6 +19,14 @@ from app.models.schemas import (
 from app.services.task_service import TaskService
 from app.utils.errors import ForbiddenException, NotFoundException
 
+# Import auth routes
+try:
+    from app.api.auth_routes import router as auth_router
+except ImportError:
+    # Create a placeholder if auth_routes module doesn't exist
+    from fastapi import APIRouter
+    auth_router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Tasks"])
@@ -263,3 +271,5 @@ def toggle_task_complete(
     logger.info(f"Toggling completion for task {id} for user {user_id}")
     task = TaskService.toggle_complete(session, user_id, id)
     return task
+
+
