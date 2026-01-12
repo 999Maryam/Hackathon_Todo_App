@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import ForeignKey
+# Don't import User here to avoid circular imports during table creation
+# User will be referenced by string in the relationship
 
 
 class Task(SQLModel, table=True):
@@ -26,6 +29,7 @@ class Task(SQLModel, table=True):
     user_id: str = Field(
         description="Owner of this task (from JWT user_id claim)",
         index=True,
+        sa_column_args=[ForeignKey("users.id")],
     )
 
     # Task Content
@@ -57,3 +61,4 @@ class Task(SQLModel, table=True):
         default_factory=datetime.utcnow,
         description="When task was last modified (UTC timestamp)",
     )
+
