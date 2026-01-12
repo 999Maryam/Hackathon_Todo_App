@@ -54,7 +54,8 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=[
             "http://localhost:3000",  # Frontend dev
-            "https://your-app.vercel.app"  # Frontend prod
+            "https://frontend-alpha-two-87.vercel.app",  # Frontend prod (Vercel)
+            "https://maryam-qaiser-mytodo-app.hf.space",  # HF Space
         ],
         allow_credentials=True,
         allow_methods=["*"],
