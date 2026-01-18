@@ -4,23 +4,20 @@ Referencing: @specs/features/authentication.md, @backend/CLAUDE.md
 """
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import User
+from app.config import settings
 import jwt
-import os
 
 security = HTTPBearer()
 
-# Get shared secret from environment (same as frontend)
-BETTER_AUTH_SECRET = os.getenv("BETTER_AUTH_SECRET")
-
-if not BETTER_AUTH_SECRET:
-    raise ValueError("BETTER_AUTH_SECRET environment variable is not set")
+# Use the shared secret from settings (loaded from environment)
+BETTER_AUTH_SECRET = settings.better_auth_secret
 
 async def get_current_user(
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     session: Session = Depends(get_session)
 ) -> User:
     """
@@ -50,8 +47,8 @@ async def get_current_user(
             algorithms=["HS256"]
         )
 
-        # Extract user ID from 'sub' claim
-        user_id: str = payload.get("sub")
+        # Extract user ID from 'sub' claim (standard JWT claim) or 'user_id' claim (custom claim)
+        user_id: str = payload.get("sub") or payload.get("user_id")
 
         if user_id is None:
             raise HTTPException(
