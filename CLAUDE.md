@@ -250,6 +250,10 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - N/A (frontend only - consumes backend API) (001-todo-frontend-ui)
 - Python 3.11, TypeScript 5.0+, Next.js 16+ + Better Auth (with JWT plugin), FastAPI, PyJWT, SQLModel, Next.js App Router (001-auth-security)
 - Neon Serverless PostgreSQL (via SQLModel ORM) (001-auth-security)
+- Python 3.13+ + FastAPI, SQLModel, SQLAlchemy, Pydantic v2 (001-chatbot-db-models)
+- Neon Serverless PostgreSQL (existing Phase II connection) (001-chatbot-db-models)
+- Python 3.13+ + OpenAI Agents SDK (`openai-agents`), FastAPI, SQLModel, MCP SDK (`fmcp`) (007-ai-agent-chat-logic)
+- Neon Serverless PostgreSQL (existing from Phase II) (007-ai-agent-chat-logic)
 
 ## Recent Changes
 - 001-todo-frontend-ui: Added TypeScript 5.0+, Next.js 16+ with App Router + Next.js, React, Tailwind CSS, Better Auth, SWR, React Hook Form, react-hot-toast

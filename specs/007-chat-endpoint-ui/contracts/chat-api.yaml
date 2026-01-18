@@ -1,0 +1,222 @@
+# Chat API Contract
+# Feature: 008-chat-endpoint-ui
+# Date: 2026-01-15
+#
+# This contract defines the API specification for the chat endpoint
+# that integrates JWT authentication, conversation state, and Gemini AI agent.
+
+openapi: 3.1.0
+info:
+  title: Chat API for Todo AI Chatbot
+  version: 1.0.0
+  description: |
+    Secure, stateless chat API endpoint that integrates JWT authentication,
+    conversation state management, Google Gemini AI agent, and MCP tools
+    for natural language task management.
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Process chat message with AI assistant
+      description: |
+        Secure chat endpoint that processes natural language messages with the AI assistant.
+        Validates JWT token, loads conversation state, runs Gemini agent with tools,
+        executes any tool calls, and returns response with tool execution results.
+      operationId: chat
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user making the request (must match JWT token)
+          schema:
+            type: string
+            example: "user_12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              addTask:
+                summary: Add a task
+                value:
+                  conversation_id: 42
+                  message: "Add buy groceries to my tasks"
+              listTasks:
+                summary: List tasks
+                value:
+                  conversation_id: null
+                  message: "What are my tasks?"
+      responses:
+        '200':
+          description: Successful response from AI assistant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                addTaskResponse:
+                  summary: Response after adding task
+                  value:
+                    conversation_id: 42
+                    response: "Got it! I've added 'buy groceries' to your tasks."
+                    tool_calls:
+                      - name: add_task
+                        arguments:
+                          title: buy groceries
+                        result:
+                          task_id: 1
+                          status: created
+                          title: buy groceries
+                listTasksResponse:
+                  summary: Response after listing tasks
+                  value:
+                    conversation_id: 43
+                    response: "Here are your tasks:\n1. Buy groceries\n2. Walk the dog"
+                    tool_calls:
+                      - name: list_tasks
+                        arguments:
+                          status: all
+                        result:
+                          tasks:
+                            - id: 1
+                              title: Buy groceries
+                              completed: false
+                            - id: 2
+                              title: Walk the dog
+                              completed: true
+                          status: success
+                          count: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      description: Request payload for chat endpoint
+      required:
+        - message
+      properties:
+        conversation_id:
+          type: integer
+          description: Optional conversation ID. Creates new conversation if null.
+          minimum: 1
+          example: 42
+        message:
+          type: string
+          description: The user's message to the AI assistant
+          minLength: 1
+          maxLength: 2000
+          example: "Add buy groceries to my tasks"
+      additionalProperties: false
+
+    ToolCallRecord:
+      type: object
+      description: Record of a tool invocation during agent execution
+      required:
+        - name
+        - arguments
+        - result
+      properties:
+        name:
+          type: string
+          description: Name of the tool that was called
+          enum:
+            - add_task
+            - list_tasks
+            - complete_task
+            - delete_task
+            - update_task
+          example: add_task
+        arguments:
+          type: object
+          description: Arguments passed to the tool
+          additionalProperties: true
+          example:
+            title: buy groceries
+            description: null
+        result:
+          type: object
+          description: Return value from the tool
+          additionalProperties: true
+          example:
+            task_id: 1
+            status: created
+            title: buy groceries
+
+    ChatResponse:
+      type: object
+      description: Response from chat endpoint
+      required:
+        - conversation_id
+        - response
+        - tool_calls
+      properties:
+        conversation_id:
+          type: integer
+          description: ID of the conversation used/created
+          minimum: 1
+          example: 42
+        response:
+          type: string
+          description: The AI assistant's response to the user
+          minLength: 1
+          example: "Got it! I've added 'buy groceries' to your tasks."
+        tool_calls:
+          type: array
+          description: List of tools invoked during this request (may be empty)
+          items:
+            $ref: '#/components/schemas/ToolCallRecord'
+          example:
+            - name: add_task
+              arguments:
+                title: buy groceries
+              result:
+                task_id: 1
+                status: created
+                title: buy groceries
+
+    ErrorResponse:
+      type: object
+      description: Error response format
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Not authenticated"
+
+  responses:
+    Unauthorized:
+      description: Not authenticated - JWT token missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Not authenticated"
+
+    Forbidden:
+      description: Access denied - user_id doesn't match JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Access denied"
+
+    ValidationError:
+      description: Validation error - request body doesn't match schema
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Field required"
