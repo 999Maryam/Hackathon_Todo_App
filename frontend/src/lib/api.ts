@@ -277,3 +277,35 @@ export const dashboardApi = {
     return apiFetch<DashboardStats>(`/api/${userId}/dashboard`);
   },
 };
+
+/**
+ * Chat API
+ */
+export interface ChatRequest {
+  conversation_id?: number;
+  message: string;
+}
+
+export interface ToolCallRecord {
+  name: string;
+  arguments: Record<string, any>;
+  result: Record<string, any>;
+}
+
+export interface ChatResponse {
+  conversation_id: number;
+  response: string;
+  tool_calls: ToolCallRecord[];
+}
+
+export const chatApi = {
+  /**
+   * Send a message to the chat endpoint
+   */
+  async sendMessage(userId: string, data: ChatRequest): Promise<ChatResponse> {
+    return apiFetch<ChatResponse>(`/api/${userId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};

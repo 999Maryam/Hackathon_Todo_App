@@ -1,0 +1,185 @@
+# Agent Response Contract
+# Feature: 007-ai-agent-chat-logic
+# Date: 2026-01-14
+#
+# This contract defines the response format for the chat runner function.
+# Note: This spec does NOT define API endpoints (that's Spec 4).
+# This contract is for internal module interface documentation.
+
+openapi: 3.1.0
+info:
+  title: Agent Response Schema
+  version: 1.0.0
+  description: |
+    Internal contract for AI Agent chat runner responses.
+    Used by Spec 4 (/api/chat endpoint) to format HTTP responses.
+
+components:
+  schemas:
+    ToolCallRecord:
+      type: object
+      description: Record of a tool invocation during agent execution
+      required:
+        - name
+        - arguments
+        - result
+      properties:
+        name:
+          type: string
+          enum:
+            - add_task
+            - list_tasks
+            - complete_task
+            - delete_task
+            - update_task
+          description: Name of the tool that was called
+          example: add_task
+        arguments:
+          type: object
+          description: Arguments passed to the tool
+          additionalProperties: true
+          example:
+            title: Buy groceries
+            description: null
+        result:
+          type: object
+          description: Return value from the tool
+          additionalProperties: true
+          example:
+            task_id: 1
+            status: created
+            title: Buy groceries
+
+    AgentResponse:
+      type: object
+      description: Response from run_agent_with_tools() function
+      required:
+        - content
+        - tool_calls
+        - conversation_id
+      properties:
+        content:
+          type: string
+          description: The assistant's text response to the user
+          minLength: 1
+          example: "Got it! I've added 'Buy groceries' to your tasks."
+        tool_calls:
+          type: array
+          description: List of tools invoked during this request (may be empty)
+          items:
+            $ref: '#/components/schemas/ToolCallRecord'
+          example:
+            - name: add_task
+              arguments:
+                title: Buy groceries
+              result:
+                task_id: 1
+                status: created
+                title: Buy groceries
+        conversation_id:
+          type: integer
+          description: ID of the conversation used for this request
+          minimum: 1
+          example: 42
+
+    # Tool-specific response schemas (from Spec 2)
+    AddTaskResult:
+      type: object
+      properties:
+        task_id:
+          type: integer
+          description: ID of the created task
+        status:
+          type: string
+          enum: [created, error]
+        title:
+          type: string
+          description: Title of the created task
+        error:
+          type: string
+          description: Error message if status is error
+
+    ListTasksResult:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              description:
+                type: string
+                nullable: true
+              completed:
+                type: boolean
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        status:
+          type: string
+          enum: [success, error]
+        count:
+          type: integer
+        error:
+          type: string
+
+    CompleteTaskResult:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        status:
+          type: string
+          enum: [completed, error]
+        title:
+          type: string
+        error:
+          type: string
+
+    DeleteTaskResult:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        status:
+          type: string
+          enum: [deleted, error]
+        title:
+          type: string
+        error:
+          type: string
+
+    UpdateTaskResult:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        status:
+          type: string
+          enum: [updated, error]
+        title:
+          type: string
+        error:
+          type: string
+
+# Example usage in Python code:
+#
+# from pydantic import BaseModel
+# from typing import List
+#
+# class ToolCallRecord(BaseModel):
+#     name: str
+#     arguments: dict
+#     result: dict
+#
+# class AgentResponse(BaseModel):
+#     content: str
+#     tool_calls: List[ToolCallRecord]
+#     conversation_id: int

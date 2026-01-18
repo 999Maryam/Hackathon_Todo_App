@@ -2,6 +2,8 @@
 
 from app.models.task import Task
 from app.models.user import User, UserCreate, UserPublic, UserLogin
+from app.models.conversation import Conversation
+from app.models.message import Message
 from app.models.schemas import (
     TaskCreate,
     TaskUpdate,
@@ -16,6 +18,8 @@ __all__ = [
     "UserCreate",
     "UserPublic",
     "UserLogin",
+    "Conversation",
+    "Message",
     "TaskCreate",
     "TaskUpdate",
     "TaskResponse",

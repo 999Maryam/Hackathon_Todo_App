@@ -72,6 +72,13 @@ def create_app() -> FastAPI:
     except ImportError as e:
         logger.warning(f"Could not import auth routes: {e}")
 
+    # Include chat routes
+    try:
+        from app.routers.chat import router as chat_router
+        app.include_router(chat_router, prefix="/api")
+    except ImportError as e:
+        logger.warning(f"Could not import chat routes: {e}")
+
     # Global exception handlers
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

@@ -12,6 +12,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { TaskList } from '@/components/dashboard/TaskList';
 import { TaskListSkeleton } from '@/components/shared/TaskListSkeleton';
 import { AddTaskButton } from '@/components/dashboard/AddTaskButton';
+import { FloatingChatButton } from '@/components/dashboard/FloatingChatButton';
 import { TaskModal } from '@/components/dashboard/TaskModal';
 import { ConfirmationDialog } from '@/components/shared/ConfirmationDialog';
 import type { Task } from '@/lib/types';
@@ -126,7 +127,8 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Buttons */}
+      <FloatingChatButton />
       <AddTaskButton onClick={handleOpenCreate} />
 
       {/* Task Modal (Create/Edit) */}

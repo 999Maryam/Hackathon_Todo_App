@@ -19,6 +19,7 @@ from app.models.schemas import (
 from app.services.task_service import TaskService
 from app.utils.errors import ForbiddenException, NotFoundException
 
+
 # Import auth routes
 try:
     from app.api.auth_routes import router as auth_router
