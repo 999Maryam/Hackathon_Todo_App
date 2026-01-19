@@ -1,3 +1,12 @@
+---
+title: MyTodo App Backend
+emoji: ✅
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Todo Backend API
 
 Secure, RESTful API for multi-user task management with JWT authentication, built with FastAPI and SQLModel.
