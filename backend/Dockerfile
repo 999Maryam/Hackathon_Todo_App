@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Build timestamp: 2025-01-19 - force rebuild for chat endpoint
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
