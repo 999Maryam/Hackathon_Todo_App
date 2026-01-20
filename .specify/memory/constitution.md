@@ -1,51 +1,41 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.0.0 → 2.0.0 (MAJOR)
+Version change: 2.0.0 → 2.1.0 (MINOR)
 
-Rationale: Complete governance restructuring from Phase II-specific to Global
-(Phases I–V) constitution. Backward-incompatible changes include expanded scope,
-new mandatory principles, and significantly broadened technology stack.
+Rationale: Added Phase IV-specific implementation guidance for local Kubernetes
+deployment workflow. No backward-incompatible changes; all existing principles,
+technology stacks, and requirements remain intact. New sections expand on
+existing "Cloud-Native Mindset" principle with concrete Phase IV details.
 
 Modified Principles:
-- "Spec-Driven Development (SDD)" → "Spec-Driven Development (SDD)" (retained, enhanced)
-- "Strict Separation of Concerns" → "Strict Separation of Concerns" (retained)
-- "Security by Design - Stateless JWT Authentication" → "Security First" (expanded scope)
-- "Multi-User Data Isolation" → merged into "Security First"
-- "Reliable Persistent Storage" → "Stateless & Resilient Design" (expanded)
-- "Modern, Responsive, and Maintainable Codebase" → split into multiple principles
+- "Cloud-Native Mindset" → expanded with Phase IV Local Development subsection
 
 Added Sections:
-- Core Principle III: Reusable Intelligence
-- Core Principle VI: Cloud-Native Mindset
-- Core Principle VII: AI-Native Focus
-- Core Principle VIII: Maintainability & Traceability
-- Phase-Specific Technology Stack (Phase I–V breakdown)
-- MCP Tools specification (Phase III+)
-- Event Topics specification (Phase V)
-- Database schema expansion (conversations, messages tables)
-- Bonus features section (Urdu, voice, reusable patterns)
-- Phase-based success criteria (100–300 pts per phase)
+- Phase IV: Local Kubernetes Development (under Cloud-Native Mindset)
+- Phase IV Local Orchestration Stack (new technology table)
+- Phase IV Implementation Requirements (Docker, Helm, Minikube, AI Ops)
+- Phase IV Directory Structure (container artifacts layout)
+- Phase IV Success Criteria expansion (detailed checklist)
 
 Removed Sections:
-- Phase II-only API endpoints (replaced with phase-progressive API design)
-- Phase II-only success criteria (replaced with global success criteria)
+- None
 
 Templates Requiring Updates:
-- ✅ plan-template.md (Constitution Check section aligned)
-- ✅ spec-template.md (Requirements section aligned)
-- ✅ tasks-template.md (Phase structure aligned)
-- ⚠ CLAUDE.md (needs reference update to v2.0.0 - manual follow-up)
+- ✅ plan-template.md (already aligned - no changes needed)
+- ✅ spec-template.md (already aligned - no changes needed)
+- ✅ tasks-template.md (already aligned - no changes needed)
+- ✅ CLAUDE.md (references v2.0.0 → should reference v2.1.0 - minor update)
 
 Follow-up TODOs:
-- TODO(RATIFICATION_DATE): Original adoption date retained from v1.0.0 (2026-01-08)
-- Update root CLAUDE.md to reference constitution v2.0.0
+- Update root CLAUDE.md to reference constitution v2.1.0
+- Verify agent files (.claude/agents/) align with Phase IV agents
 -->
 
 # Hackathon II – Todo App Global Constitution
 
 **Project**: The Evolution of Todo: From Console to Cloud-Native AI Chatbot
-**Version**: 2.0.0 | **Ratified**: 2026-01-08 | **Last Amended**: 2026-01-12
+**Version**: 2.1.0 | **Ratified**: 2026-01-08 | **Last Amended**: 2026-01-20
 
 > This is the **single global constitution** for the entire hackathon.
 > All previous phase-specific constitutions are superseded by this version.
@@ -135,13 +125,94 @@ No in-memory state. Persist everything in Neon PostgreSQL:
 
 Container-first, orchestration-ready design:
 
-**Phase IV:**
-- Docker containerization (frontend + backend)
-- Helm charts for Kubernetes deployment
-- Minikube local orchestration
-- kubectl-ai / kagent usage demonstrated
+**Phase IV: Local Kubernetes Development**
 
-**Phase V:**
+Phase IV focuses on containerization and local Kubernetes orchestration. **No cloud deployment yet** — all work targets local Minikube clusters.
+
+**Core Phase IV Requirements:**
+- Docker containerization for frontend and backend services
+- Helm charts for reproducible Kubernetes deployments
+- Minikube as the local Kubernetes cluster
+- kubectl-ai / kagent for AI-assisted Kubernetes operations
+- Local development workflow fully functional before any cloud work
+
+**Phase IV Local Orchestration Stack:**
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Container Runtime | Docker | Build and run container images |
+| Local Cluster | Minikube | Single-node Kubernetes cluster |
+| Package Manager | Helm 3.x | Kubernetes deployment charts |
+| AI Operations | kubectl-ai / kagent | AI-assisted kubectl commands |
+| Registry | Minikube built-in | Local image registry |
+| Ingress | Minikube addon | Local service exposure |
+
+**Phase IV Implementation Requirements:**
+
+1. **Docker Containerization**
+   - Multi-stage Dockerfiles for optimized images
+   - Separate Dockerfiles for frontend (Next.js) and backend (FastAPI)
+   - `.dockerignore` files to exclude unnecessary build artifacts
+   - Non-root user execution for security
+   - Health check endpoints configured
+
+2. **Helm Charts**
+   - Chart per service (frontend, backend)
+   - Parameterized `values.yaml` for environment configuration
+   - ConfigMaps for non-sensitive configuration
+   - Secrets for sensitive data (DB credentials, JWT secrets)
+   - Resource limits and requests defined
+   - Readiness and liveness probes configured
+
+3. **Minikube Cluster**
+   - Minimum 4GB memory, 2 CPUs allocated
+   - Docker driver (preferred) or appropriate alternative
+   - Ingress addon enabled for local routing
+   - Registry addon enabled for local images
+   - Proper namespace isolation (e.g., `todo-app`)
+
+4. **AI Operations (kubectl-ai / kagent)**
+   - Demonstrate AI-assisted pod debugging
+   - Demonstrate AI-assisted log analysis
+   - Demonstrate AI-assisted resource scaling
+   - Document AI-assisted commands used
+
+**Phase IV Directory Structure:**
+
+```
+docker/
+├── frontend/
+│   ├── Dockerfile
+│   └── .dockerignore
+└── backend/
+    ├── Dockerfile
+    └── .dockerignore
+
+helm/
+├── frontend/
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── configmap.yaml
+│       └── ingress.yaml
+└── backend/
+    ├── Chart.yaml
+    ├── values.yaml
+    └── templates/
+        ├── deployment.yaml
+        ├── service.yaml
+        ├── configmap.yaml
+        ├── secret.yaml
+        └── ingress.yaml
+
+k8s/
+├── namespace.yaml
+└── README.md (Minikube setup instructions)
+```
+
+**Phase V (Future):**
 - Production cloud deployment (DOKS/AKS/GKE)
 - CI/CD via GitHub Actions
 - Monitoring and logging infrastructure
@@ -216,16 +287,26 @@ specs/
 | Chat UI | OpenAI ChatKit |
 | API Pattern | Single stateless `/api/{user_id}/chat` endpoint |
 
-### Phase IV–V: Cloud Native
+### Phase IV: Local Kubernetes
 
 | Layer | Technology |
 |-------|------------|
-| Containerization | Docker |
-| Local Orchestration | Minikube |
-| Deployment | Helm charts |
+| Containerization | Docker (multi-stage builds) |
+| Local Orchestration | Minikube (single-node cluster) |
+| Deployment | Helm 3.x charts |
 | AI Operations | kubectl-ai / kagent |
+| Local Registry | Minikube built-in registry |
+| Ingress | Minikube ingress addon |
+
+### Phase V: Cloud Native (Future)
+
+| Layer | Technology |
+|-------|------------|
+| Cloud Orchestration | DOKS / AKS / GKE |
 | Event Streaming | Kafka (or Redpanda) |
 | Microservices | Dapr (Pub/Sub, State, Jobs, Secrets, Service Invocation) |
+| CI/CD | GitHub Actions |
+| Monitoring | TBD (Phase V planning) |
 
 ---
 
@@ -253,6 +334,13 @@ All endpoints MUST:
 - Return appropriate HTTP status codes (200, 201, 400, 401, 403, 404, 500)
 - Include comprehensive Swagger documentation
 - Return structured JSON error responses
+
+### Phase IV: Container Health Endpoints
+
+```
+GET    /health                        # Kubernetes liveness probe
+GET    /ready                         # Kubernetes readiness probe
+```
 
 ### Phase V: Event Topics
 
@@ -284,6 +372,15 @@ task-updates     # Real-time task change notifications
 - Clear user feedback (loading, errors, success)
 - HTTP-only cookies or secure localStorage for tokens
 
+### Docker & Kubernetes (Phase IV)
+
+- Multi-stage Dockerfile builds for minimal image size
+- No secrets in Dockerfiles or image layers
+- Resource limits defined in Helm values
+- Health probes configured for all deployments
+- Consistent labeling strategy across all resources
+- Namespace isolation for application workloads
+
 ### Testing Requirements
 
 **Backend:**
@@ -301,6 +398,12 @@ task-updates     # Real-time task change notifications
 - Data persistence verification
 - Swagger documentation verification
 
+**Phase IV:**
+- Container build verification (images build successfully)
+- Helm chart linting (`helm lint`)
+- Kubernetes manifest validation
+- Deployment smoke tests on Minikube
+
 ---
 
 ## Constraints
@@ -312,6 +415,11 @@ Phase III MUST reuse Phase II:
 - Authentication system
 - API base patterns
 
+Phase IV MUST containerize Phase III:
+- No application logic changes required
+- Configuration externalized via environment variables
+- Health endpoints added for Kubernetes probes
+
 ### Environment Variables Only
 
 Never hardcode secrets:
@@ -320,11 +428,17 @@ Never hardcode secrets:
 - `BETTER_AUTH_SECRET`
 - `NEXT_PUBLIC_OPENAI_DOMAIN_KEY`
 
+**Phase IV Additional Variables (Kubernetes):**
+- Secrets managed via Kubernetes Secrets
+- ConfigMaps for non-sensitive configuration
+- No secrets in Helm `values.yaml` committed to Git
+
 ### Stateless Architecture
 
 - No session storage
 - JWT + DB-persisted conversation history only
 - Server restarts MUST NOT lose state
+- Containers MUST be stateless and horizontally scalable
 
 ### Domain Allowlist
 
@@ -358,10 +472,38 @@ Configure OpenAI ChatKit domain key for production URL.
 
 ### Phase IV: Containerized Deployment (250 points)
 
-- [ ] Docker containers for frontend + backend
-- [ ] Helm chart deployment
-- [ ] Minikube orchestration
-- [ ] kubectl-ai / kagent usage demonstrated
+**Docker Containerization:**
+- [ ] Multi-stage Dockerfile for frontend (Next.js)
+- [ ] Multi-stage Dockerfile for backend (FastAPI)
+- [ ] Both images build successfully
+- [ ] Images run correctly with `docker run`
+- [ ] Non-root user execution in containers
+- [ ] `.dockerignore` files configured
+
+**Helm Charts:**
+- [ ] Helm chart for frontend service
+- [ ] Helm chart for backend service
+- [ ] `values.yaml` parameterized for environment configuration
+- [ ] ConfigMaps for application configuration
+- [ ] Secrets for sensitive data (template, not committed values)
+- [ ] Resource limits and requests defined
+- [ ] Readiness and liveness probes configured
+- [ ] Helm lint passes for all charts
+
+**Minikube Orchestration:**
+- [ ] Minikube cluster starts successfully
+- [ ] Application namespace created
+- [ ] Both services deploy via `helm install`
+- [ ] Services accessible via Minikube ingress
+- [ ] Application functional end-to-end on Minikube
+- [ ] Pods healthy and passing probes
+
+**AI Operations (kubectl-ai / kagent):**
+- [ ] kubectl-ai or kagent installed and configured
+- [ ] Demonstrated AI-assisted pod status check
+- [ ] Demonstrated AI-assisted log analysis
+- [ ] Demonstrated AI-assisted troubleshooting
+- [ ] Commands documented in README
 
 ### Phase V: Event-Driven Architecture (300 points)
 
