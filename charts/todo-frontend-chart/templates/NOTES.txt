@@ -1,0 +1,20 @@
+{{- if eq .Values.service.type "NodePort" }}
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-frontend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.service.type "ClusterIP" }}
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ .Release.Name }}-frontend,release={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:3000 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 3000:3000
+{{- end }}
+
+2. The frontend is configured to connect to backend at: {{ .Values.env.NEXT_PUBLIC_API_URL }}
+
+3. To verify the deployment:
+  kubectl get deployment {{ .Release.Name }}-frontend -n {{ .Release.Namespace }}
+  kubectl get pods -l app={{ .Release.Name }}-frontend -n {{ .Release.Namespace }}
+  kubectl get service {{ .Release.Name }}-frontend -n {{ .Release.Namespace }}
+
+Thank you for installing {{ .Chart.Name }}!

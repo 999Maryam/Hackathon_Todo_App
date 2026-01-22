@@ -1,26 +1,67 @@
-FROM python:3.11-slim
+# Task: T005 | Spec: 008-docker-containerization
+# ========================================
+# Optimized Multi-Stage Dockerfile
+# Python FastAPI Backend
+# ========================================
 
-# Build timestamp: 2025-01-19 - force rebuild for chat endpoint
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# ========================================
+# Stage 1: Builder
+# ========================================
+FROM python:3.12-slim AS builder
 
-# Create non-root user for security (required by HF Spaces)
-RUN useradd -m -u 1000 user
-USER user
-ENV PATH="/home/user/.local/bin:$PATH"
+# Set environment variables for Python optimization
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY --chown=user ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+# Install dependencies in a virtual environment
+COPY requirements.txt ./
+
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install -r requirements.txt
+
+# ========================================
+# Stage 2: Runtime
+# ========================================
+FROM python:3.12-slim AS runtime
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user with specific UID
+RUN useradd --create-home --uid 1001 appuser
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy application code
-COPY --chown=user ./app ./app
+COPY . .
 
-# Expose port 7860 (Hugging Face Spaces requirement)
-EXPOSE 7860
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Switch to non-root user
+USER appuser
+
+# Expose application port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

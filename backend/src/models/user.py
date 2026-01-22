@@ -35,3 +35,9 @@ class UserUpdate(SQLModel):
     email: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = None
+
+
+class UserLogin(SQLModel):
+    """Schema for login request body"""
+    email: str
+    password: str
