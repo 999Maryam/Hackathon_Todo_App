@@ -1,0 +1,154 @@
+# Contract: Frontend Helm Chart Structure
+# Feature: 009-helm-charts
+# Purpose: Define expected structure and values for todo-frontend-chart
+
+---
+# Chart.yaml Contract
+chart:
+  apiVersion: v2
+  name: todo-frontend-chart
+  version: "0.1.0"
+  appVersion: "1.0.0"
+  description: "Helm chart for Todo AI Chatbot Next.js frontend"
+  type: application
+
+---
+# values.yaml Contract
+values:
+  # Replica configuration
+  replicaCount: 1
+
+  # Image configuration
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 3000
+    nodePort: null  # Optional, only used when type is NodePort
+
+  # Resource limits (suitable for Minikube)
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "300m"
+
+  # Environment variables
+  env:
+    NEXT_PUBLIC_API_URL: "http://todo-backend:8000"
+    NODE_ENV: "production"
+
+  # Health probes
+  probes:
+    liveness:
+      path: "/"
+      port: 3000
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readiness:
+      port: 3000
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+---
+# templates/deployment.yaml Contract
+deployment:
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: "{{ .Release.Name }}"
+    labels:
+      app: "{{ .Release.Name }}"
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  spec:
+    replicas: "{{ .Values.replicaCount }}"
+    selector:
+      matchLabels:
+        app: "{{ .Release.Name }}"
+    template:
+      metadata:
+        labels:
+          app: "{{ .Release.Name }}"
+      spec:
+        containers:
+          - name: frontend
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+            ports:
+              - containerPort: 3000
+                protocol: TCP
+            env:
+              - name: NEXT_PUBLIC_API_URL
+                value: "{{ .Values.env.NEXT_PUBLIC_API_URL }}"
+              - name: NODE_ENV
+                value: "{{ .Values.env.NODE_ENV }}"
+            resources:
+              requests:
+                memory: "{{ .Values.resources.requests.memory }}"
+                cpu: "{{ .Values.resources.requests.cpu }}"
+              limits:
+                memory: "{{ .Values.resources.limits.memory }}"
+                cpu: "{{ .Values.resources.limits.cpu }}"
+            livenessProbe:
+              httpGet:
+                path: "{{ .Values.probes.liveness.path }}"
+                port: "{{ .Values.probes.liveness.port }}"
+              initialDelaySeconds: "{{ .Values.probes.liveness.initialDelaySeconds }}"
+              periodSeconds: "{{ .Values.probes.liveness.periodSeconds }}"
+              timeoutSeconds: "{{ .Values.probes.liveness.timeoutSeconds }}"
+              failureThreshold: "{{ .Values.probes.liveness.failureThreshold }}"
+            readinessProbe:
+              tcpSocket:
+                port: "{{ .Values.probes.readiness.port }}"
+              initialDelaySeconds: "{{ .Values.probes.readiness.initialDelaySeconds }}"
+              periodSeconds: "{{ .Values.probes.readiness.periodSeconds }}"
+              timeoutSeconds: "{{ .Values.probes.readiness.timeoutSeconds }}"
+              failureThreshold: "{{ .Values.probes.readiness.failureThreshold }}"
+
+---
+# templates/service.yaml Contract
+service:
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ .Release.Name }}"
+    labels:
+      app: "{{ .Release.Name }}"
+  spec:
+    type: "{{ .Values.service.type }}"
+    ports:
+      - port: "{{ .Values.service.port }}"
+        targetPort: 3000
+        protocol: TCP
+        name: http
+        # nodePort only if type is NodePort and nodePort is set
+    selector:
+      app: "{{ .Release.Name }}"
+
+---
+# Validation Rules
+validation:
+  helm_lint:
+    description: "Chart must pass helm lint without errors"
+    command: "helm lint ./charts/todo-frontend-chart"
+    expected_exit_code: 0
+
+  helm_template:
+    description: "Chart must render valid Kubernetes YAML"
+    command: "helm template test-release ./charts/todo-frontend-chart"
+    expected: "Valid YAML output with Deployment and Service"
+
+  dry_run_install:
+    description: "Chart must pass dry-run installation"
+    command: "helm install test ./charts/todo-frontend-chart --dry-run"
+    expected_exit_code: 0
