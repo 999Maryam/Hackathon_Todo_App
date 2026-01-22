@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from ..database import get_session
 from ..api.deps import get_current_user
-from ..models.user import UserCreate, UserRead
+from ..models.user import UserCreate, UserRead, UserLogin
 from ..services.auth_service import authenticate_user, create_user, create_access_token_for_user
 
 router = APIRouter()
@@ -27,9 +27,9 @@ async def register(user_create: UserCreate, session: Session = Depends(get_sessi
 
 
 @router.post("/login")
-async def login(email: str, password: str, session: Session = Depends(get_session)):
+async def login(login_data: UserLogin, session: Session = Depends(get_session)):
     """Login user and return access token"""
-    user = authenticate_user(session, email, password)
+    user = authenticate_user(session, login_data.email, login_data.password)
 
     if not user:
         raise HTTPException(

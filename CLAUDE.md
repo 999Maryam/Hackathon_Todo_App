@@ -254,6 +254,10 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - Neon Serverless PostgreSQL (existing Phase II connection) (001-chatbot-db-models)
 - Python 3.13+ + OpenAI Agents SDK (`openai-agents`), FastAPI, SQLModel, MCP SDK (`fmcp`) (007-ai-agent-chat-logic)
 - Neon Serverless PostgreSQL (existing from Phase II) (007-ai-agent-chat-logic)
+- Python 3.13+ (backend), Node.js 20 (frontend), Docker 24+ + FastAPI, uvicorn (backend); Next.js 16+, React 19 (frontend); Docker, docker-compose (008-docker-containerization)
+- N/A (containerization layer - app connects to external Neon PostgreSQL) (008-docker-containerization)
+- Bash/Shell (documentation and commands), Minikube 1.30+, Helm 3.x, kubectl 1.28+ + Minikube (Docker driver), Helm charts (todo-backend-chart, todo-frontend-chart), kubectl-ai or kagent (010-minikube-deploy)
+- N/A (applications use external Neon PostgreSQL) (010-minikube-deploy)
 
 ## Recent Changes
 - 001-todo-frontend-ui: Added TypeScript 5.0+, Next.js 16+ with App Router + Next.js, React, Tailwind CSS, Better Auth, SWR, React Hook Form, react-hot-toast

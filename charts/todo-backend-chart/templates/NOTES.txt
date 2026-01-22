@@ -1,0 +1,76 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+Application Details:
+--------------------
+- Chart Version: {{ .Chart.Version }}
+- App Version: {{ .Chart.AppVersion }}
+- Replicas: {{ .Values.replicaCount }}
+- Service Type: {{ .Values.service.type }}
+- Service Port: {{ .Values.service.port }}
+
+To access your application:
+
+{{- if eq .Values.service.type "ClusterIP" }}
+
+1. Forward the port to your local machine:
+
+   kubectl port-forward svc/{{ .Release.Name }}-todo-backend {{ .Values.service.port }}:{{ .Values.service.port }}
+
+2. Access the application at:
+
+   http://localhost:{{ .Values.service.port }}
+
+{{- else if eq .Values.service.type "NodePort" }}
+
+1. Get the application URL:
+
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-todo-backend)
+   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   echo http://$NODE_IP:$NODE_PORT
+
+{{- else if eq .Values.service.type "LoadBalancer" }}
+
+1. Get the application URL:
+
+   NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+
+   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ .Release.Name }}-todo-backend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+   echo http://$SERVICE_IP:{{ .Values.service.port }}
+
+{{- end }}
+
+Health Check Endpoint:
+---------------------
+The application exposes a health check at: /health
+
+Check pod status:
+----------------
+  $ kubectl get pods -l app={{ .Release.Name }}-todo-backend
+
+View logs:
+---------
+  $ kubectl logs -l app={{ .Release.Name }}-todo-backend
+
+Configuration:
+-------------
+Environment: {{ .Values.env.ENVIRONMENT }}
+Database URL: {{ if .Values.env.DATABASE_URL }}configured{{ else }}NOT SET - Please configure!{{ end }}
+Better Auth Secret: {{ if .Values.env.BETTER_AUTH_SECRET }}configured{{ else }}NOT SET - Please configure!{{ end }}
+OpenRouter API Key: Using secret {{ .Values.secrets.openRouterApiKey.secretName }}
+
+{{ if not .Values.env.DATABASE_URL }}
+WARNING: DATABASE_URL is not set! The application may fail to start.
+Please update your values and upgrade the release.
+{{ end }}
+
+{{ if not .Values.env.BETTER_AUTH_SECRET }}
+WARNING: BETTER_AUTH_SECRET is not set! The application may fail to start.
+Please update your values and upgrade the release.
+{{ end }}

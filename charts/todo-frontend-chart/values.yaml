@@ -1,0 +1,40 @@
+# Default values for todo-frontend-chart
+replicaCount: 1
+
+image:
+  repository: todo-frontend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3000
+  nodePort: null
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  NEXT_PUBLIC_API_URL: "http://todo-backend:8000"
+  NODE_ENV: "production"
+  HOSTNAME: "0.0.0.0"
+
+probes:
+  liveness:
+    path: /
+    port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readiness:
+    port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3

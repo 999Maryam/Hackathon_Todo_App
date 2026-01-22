@@ -1,0 +1,170 @@
+# Contract: Backend Helm Chart Structure
+# Feature: 009-helm-charts
+# Purpose: Define expected structure and values for todo-backend-chart
+
+---
+# Chart.yaml Contract
+chart:
+  apiVersion: v2
+  name: todo-backend-chart
+  version: "0.1.0"
+  appVersion: "1.0.0"
+  description: "Helm chart for Todo AI Chatbot FastAPI backend"
+  type: application
+
+---
+# values.yaml Contract
+values:
+  # Replica configuration
+  replicaCount: 1
+
+  # Image configuration
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8000
+    nodePort: null  # Optional, only used when type is NodePort
+
+  # Resource limits (suitable for Minikube)
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # Environment variables (non-sensitive)
+  env:
+    DATABASE_URL: ""
+    ENVIRONMENT: "production"
+    BETTER_AUTH_SECRET: ""
+
+  # Secret references (sensitive values)
+  secrets:
+    openRouterApiKey:
+      secretName: "todo-backend-secrets"
+      secretKey: "OPENROUTER_API_KEY"
+
+  # Health probes
+  probes:
+    liveness:
+      path: "/health"
+      port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readiness:
+      path: "/health"
+      port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+---
+# templates/deployment.yaml Contract
+deployment:
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: "{{ .Release.Name }}"
+    labels:
+      app: "{{ .Release.Name }}"
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  spec:
+    replicas: "{{ .Values.replicaCount }}"
+    selector:
+      matchLabels:
+        app: "{{ .Release.Name }}"
+    template:
+      metadata:
+        labels:
+          app: "{{ .Release.Name }}"
+      spec:
+        containers:
+          - name: backend
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+            ports:
+              - containerPort: 8000
+                protocol: TCP
+            env:
+              - name: DATABASE_URL
+                value: "{{ .Values.env.DATABASE_URL }}"
+              - name: ENVIRONMENT
+                value: "{{ .Values.env.ENVIRONMENT }}"
+              - name: BETTER_AUTH_SECRET
+                value: "{{ .Values.env.BETTER_AUTH_SECRET }}"
+              - name: OPENROUTER_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: "{{ .Values.secrets.openRouterApiKey.secretName }}"
+                    key: "{{ .Values.secrets.openRouterApiKey.secretKey }}"
+            resources:
+              requests:
+                memory: "{{ .Values.resources.requests.memory }}"
+                cpu: "{{ .Values.resources.requests.cpu }}"
+              limits:
+                memory: "{{ .Values.resources.limits.memory }}"
+                cpu: "{{ .Values.resources.limits.cpu }}"
+            livenessProbe:
+              httpGet:
+                path: "{{ .Values.probes.liveness.path }}"
+                port: "{{ .Values.probes.liveness.port }}"
+              initialDelaySeconds: "{{ .Values.probes.liveness.initialDelaySeconds }}"
+              periodSeconds: "{{ .Values.probes.liveness.periodSeconds }}"
+              timeoutSeconds: "{{ .Values.probes.liveness.timeoutSeconds }}"
+              failureThreshold: "{{ .Values.probes.liveness.failureThreshold }}"
+            readinessProbe:
+              httpGet:
+                path: "{{ .Values.probes.readiness.path }}"
+                port: "{{ .Values.probes.readiness.port }}"
+              initialDelaySeconds: "{{ .Values.probes.readiness.initialDelaySeconds }}"
+              periodSeconds: "{{ .Values.probes.readiness.periodSeconds }}"
+              timeoutSeconds: "{{ .Values.probes.readiness.timeoutSeconds }}"
+              failureThreshold: "{{ .Values.probes.readiness.failureThreshold }}"
+
+---
+# templates/service.yaml Contract
+service:
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ .Release.Name }}"
+    labels:
+      app: "{{ .Release.Name }}"
+  spec:
+    type: "{{ .Values.service.type }}"
+    ports:
+      - port: "{{ .Values.service.port }}"
+        targetPort: 8000
+        protocol: TCP
+        name: http
+        # nodePort only if type is NodePort and nodePort is set
+    selector:
+      app: "{{ .Release.Name }}"
+
+---
+# Validation Rules
+validation:
+  helm_lint:
+    description: "Chart must pass helm lint without errors"
+    command: "helm lint ./charts/todo-backend-chart"
+    expected_exit_code: 0
+
+  helm_template:
+    description: "Chart must render valid Kubernetes YAML"
+    command: "helm template test-release ./charts/todo-backend-chart"
+    expected: "Valid YAML output with Deployment and Service"
+
+  dry_run_install:
+    description: "Chart must pass dry-run installation"
+    command: "helm install test ./charts/todo-backend-chart --dry-run"
+    expected_exit_code: 0

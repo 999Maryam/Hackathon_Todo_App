@@ -1,0 +1,46 @@
+# Default values for todo-backend-chart
+replicaCount: 1
+
+image:
+  repository: todo-backend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8000
+  nodePort: null
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  DATABASE_URL: ""
+  ENVIRONMENT: "production"
+  BETTER_AUTH_SECRET: ""
+
+secrets:
+  openRouterApiKey:
+    secretName: "todo-backend-secrets"
+    secretKey: "OPENROUTER_API_KEY"
+
+probes:
+  liveness:
+    path: /health
+    port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /health
+    port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
