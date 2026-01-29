@@ -34,8 +34,19 @@ client = OpenAI(
 )
 
 # Store model name and system prompt for dynamic model creation
-MODEL_NAME = settings.openrouter_model or "mistralai/devstral-2512:free"
+MODEL_NAME = settings.openrouter_model or "meta-llama/llama-3.3-70b-instruct:free"
 SYSTEM_PROMPT_CONTENT = SYSTEM_PROMPT
+
+# Fallback models list - will try each one if previous fails with rate limit or server error
+FALLBACK_MODELS = [
+    MODEL_NAME,
+    "google/gemini-2.0-flash-exp:free",
+    "meta-llama/llama-3.2-3b-instruct:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
+    "qwen/qwen-2.5-7b-instruct:free",
+    "huggingfaceh4/zephyr-7b-beta:free",
+    "openchat/openchat-7b:free",
+]
 
 
 def get_model(model_name: str = None):
@@ -69,24 +80,50 @@ class OpenRouterChat:
         messages = [{"role": "system", "content": self.model.system_prompt}]
         messages.extend(self.history)
 
-        try:
-            # Call OpenRouter API with function calling support
-            response = self.model.client.chat.completions.create(
-                model=self.model.model_name,
-                messages=messages,
-                tools=[{
-                    "type": "function",
-                    "function": {
-                        "name": tool["name"],
-                        "description": tool["description"],
-                        "parameters": tool["parameters"]
-                    }
-                } for tool in TOOLS_DEFINITION],
-                tool_choice="auto",  # Auto-select tools based on user request
-                temperature=0.7,
-            )
+        # Error response class for failures
+        class ErrorResponse:
+            def __init__(self, text):
+                self.text = text
+                self.candidates = []
 
-            # Check if the model wants to call a function
+        try:
+            # Try each model in fallback list until one succeeds
+            last_error = None
+            response = None
+            for model_to_try in FALLBACK_MODELS:
+                try:
+                    # Call OpenRouter API with function calling support
+                    response = self.model.client.chat.completions.create(
+                        model=model_to_try,
+                        messages=messages,
+                        tools=[{
+                            "type": "function",
+                            "function": {
+                                "name": tool["name"],
+                                "description": tool["description"],
+                                "parameters": tool["parameters"]
+                            }
+                        } for tool in TOOLS_DEFINITION],
+                        tool_choice="auto",  # Auto-select tools based on user request
+                        temperature=0.7,
+                    )
+                    # If we get here, the call succeeded - break out of retry loop
+                    break
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    # Retry on rate limit (429), not found (404), bad gateway (502), or service unavailable (503)
+                    if any(code in error_str for code in ["429", "404", "502", "503", "500"]) or "rate" in error_str.lower():
+                        continue  # Try next model
+                    else:
+                        raise  # Re-raise other errors immediately
+            else:
+                # All models failed - raise the last error
+                if last_error:
+                    raise last_error
+                raise Exception("No models available")
+
+            # Check if the model wants to call a function (only reached if break was executed)
             choice = response.choices[0]
             message_obj = choice.message
 
@@ -128,7 +165,6 @@ class OpenRouterChat:
                     function_name = tool_call.function.name
 
                     # Execute the tool call
-                    # Note: This is simplified - in a real implementation, you'd need to handle this differently
                     final_response += f"[Function {function_name} called with args: {function_args}] "
 
                 # Add assistant response to history
@@ -159,14 +195,12 @@ class OpenRouterChat:
                 return MockResponse(response_content)
 
         except Exception as e:
-            # Return error message if API call fails
-            error_msg = f"Error calling OpenRouter API: {str(e)}"
-            class MockResponse:
-                def __init__(self, text):
-                    self.text = text
-                    self.candidates = []
-
-            return MockResponse(error_msg)
+            # Return user-friendly error message if all models fail
+            error_msg = "Sorry, I'm having trouble connecting to the AI service right now. Please try again in a moment."
+            # Remove the failed message from history
+            if self.history and self.history[-1]["role"] == "user":
+                self.history.pop()
+            return ErrorResponse(error_msg)
 
 
 model = get_model()

@@ -41,7 +41,8 @@ export default function SignUpPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      // Exclude confirmPassword from the request
+      // Exclude confirmPassword from the request - destructure to omit
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...requestData } = data;
       await registerUser(requestData);
       // Redirect to dashboard on success

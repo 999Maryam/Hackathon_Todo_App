@@ -13,7 +13,11 @@ import type {
   TaskUpdate,
   TaskListResponse,
   DashboardStats,
-  ApiError
+  ApiError,
+  Tag,
+  TagCreate,
+  TagWithCount,
+  TagListResponse,
 } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -210,20 +214,61 @@ export const authApi = {
 };
 
 /**
- * Tasks API
+ * Tasks API - Phase V: Extended with search, filter, sort parameters
  */
 export const tasksApi = {
   /**
-   * List all tasks for a user
+   * List all tasks for a user with optional search, filter, and sort
    */
-  async list(userId: string, statusFilter: 'all' | 'pending' | 'completed' = 'all'): Promise<TaskListResponse> {
-    return apiFetch<TaskListResponse>(`/api/${userId}/tasks?status_filter=${statusFilter}`);
+  async list(
+    userId: string,
+    options?: {
+      search?: string;
+      priority?: string[];
+      completed?: boolean;
+      due_from?: string;
+      due_to?: string;
+      tag_ids?: number[];
+      sort_by?: string;
+      sort_order?: 'asc' | 'desc';
+    }
+  ): Promise<TaskListResponse> {
+    const params = new URLSearchParams();
+
+    if (options?.search) {
+      params.append('search', options.search);
+    }
+    if (options?.priority && options.priority.length > 0) {
+      params.append('priority', options.priority.join(','));
+    }
+    if (options?.completed !== undefined) {
+      params.append('completed', String(options.completed));
+    }
+    if (options?.due_from) {
+      params.append('due_from', options.due_from);
+    }
+    if (options?.due_to) {
+      params.append('due_to', options.due_to);
+    }
+    if (options?.tag_ids && options.tag_ids.length > 0) {
+      params.append('tag_ids', options.tag_ids.join(','));
+    }
+    if (options?.sort_by) {
+      params.append('sort_by', options.sort_by);
+    }
+    if (options?.sort_order) {
+      params.append('sort_order', options.sort_order);
+    }
+
+    const queryString = params.toString();
+    const url = `/api/${userId}/tasks${queryString ? `?${queryString}` : ''}`;
+    return apiFetch<TaskListResponse>(url);
   },
 
   /**
    * Get a single task
    */
-  async get(userId: string, taskId: number): Promise<Task> {
+  async get(userId: string, taskId: string | number): Promise<Task> {
     return apiFetch<Task>(`/api/${userId}/tasks/${taskId}`);
   },
 
@@ -240,7 +285,7 @@ export const tasksApi = {
   /**
    * Update a task
    */
-  async update(userId: string, taskId: number, data: TaskUpdate): Promise<Task> {
+  async update(userId: string, taskId: string | number, data: TaskUpdate): Promise<Task> {
     return apiFetch<Task>(`/api/${userId}/tasks/${taskId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -250,7 +295,7 @@ export const tasksApi = {
   /**
    * Delete a task
    */
-  async delete(userId: string, taskId: number): Promise<void> {
+  async delete(userId: string, taskId: string | number): Promise<void> {
     return apiFetch<void>(`/api/${userId}/tasks/${taskId}`, {
       method: 'DELETE',
     });
@@ -259,7 +304,7 @@ export const tasksApi = {
   /**
    * Toggle task completion
    */
-  async toggleComplete(userId: string, taskId: number): Promise<Task> {
+  async toggleComplete(userId: string, taskId: string | number): Promise<Task> {
     return apiFetch<Task>(`/api/${userId}/tasks/${taskId}/complete`, {
       method: 'PATCH',
     });
@@ -288,8 +333,8 @@ export interface ChatRequest {
 
 export interface ToolCallRecord {
   name: string;
-  arguments: Record<string, any>;
-  result: Record<string, any>;
+  arguments: Record<string, unknown>;
+  result: Record<string, unknown>;
 }
 
 export interface ChatResponse {
@@ -306,6 +351,79 @@ export const chatApi = {
     return apiFetch<ChatResponse>(`/api/${userId}/chat`, {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+};
+
+/**
+ * Tags API - Phase V US3: Tag Management
+ */
+export const tagsApi = {
+  /**
+   * List all tags for a user with task counts
+   */
+  async list(userId: string): Promise<TagListResponse> {
+    return apiFetch<TagListResponse>(`/api/${userId}/tags`);
+  },
+
+  /**
+   * Get a single tag with task count
+   */
+  async get(userId: string, tagId: number): Promise<TagWithCount> {
+    return apiFetch<TagWithCount>(`/api/${userId}/tags/${tagId}`);
+  },
+
+  /**
+   * Create a new tag
+   */
+  async create(userId: string, data: TagCreate): Promise<Tag> {
+    return apiFetch<Tag>(`/api/${userId}/tags`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Update a tag
+   */
+  async update(userId: string, tagId: number, data: TagCreate): Promise<Tag> {
+    return apiFetch<Tag>(`/api/${userId}/tags/${tagId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Delete a tag
+   */
+  async delete(userId: string, tagId: number): Promise<void> {
+    return apiFetch<void>(`/api/${userId}/tags/${tagId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * Get tags for a specific task
+   */
+  async getTaskTags(userId: string, taskId: string): Promise<Tag[]> {
+    return apiFetch<Tag[]>(`/api/${userId}/tasks/${taskId}/tags`);
+  },
+
+  /**
+   * Add a tag to a task
+   */
+  async addTagToTask(userId: string, taskId: string, tagId: number): Promise<void> {
+    return apiFetch<void>(`/api/${userId}/tasks/${taskId}/tags/${tagId}`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Remove a tag from a task
+   */
+  async removeTagFromTask(userId: string, taskId: string, tagId: number): Promise<void> {
+    return apiFetch<void>(`/api/${userId}/tasks/${taskId}/tags/${tagId}`, {
+      method: 'DELETE',
     });
   },
 };

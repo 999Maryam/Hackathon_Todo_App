@@ -6,7 +6,7 @@
 
 export default function TypingIndicator() {
   return (
-    <div className="flex items-center space-x-1.5">
+    <div data-testid="typing-indicator" className="flex items-center space-x-1.5">
       <div
         className="w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-bounce"
         style={{ animationDelay: '0ms', animationDuration: '0.6s' }}

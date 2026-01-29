@@ -39,7 +39,7 @@ export function Sidebar() {
     await logout();
   };
 
-  const NavContent = () => (
+  const navContent = (
     <>
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-6 border-b border-gray-200 dark:border-gray-700/50">
@@ -118,12 +118,12 @@ export function Sidebar() {
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <NavContent />
+        {navContent}
       </aside>
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-800/50 flex-col">
-        <NavContent />
+        {navContent}
       </aside>
     </>
   );

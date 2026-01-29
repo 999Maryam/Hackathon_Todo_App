@@ -20,11 +20,15 @@ resources:
     memory: 128Mi
 
 env:
-  DATABASE_URL: ""
   ENVIRONMENT: "production"
-  BETTER_AUTH_SECRET: ""
 
 secrets:
+  databaseUrl:
+    secretName: "todo-backend-secrets"
+    secretKey: "DATABASE_URL"
+  authSecret:
+    secretName: "todo-backend-secrets"
+    secretKey: "BETTER_AUTH_SECRET"
   openRouterApiKey:
     secretName: "todo-backend-secrets"
     secretKey: "OPENROUTER_API_KEY"

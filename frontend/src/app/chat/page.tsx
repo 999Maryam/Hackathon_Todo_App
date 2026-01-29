@@ -11,14 +11,22 @@ import { Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatBubble, TypingIndicator } from '@/components';
-import { chatApi } from '@/lib/api';
+import { chatApi, ToolCallRecord } from '@/lib/api';
 import { ChatLayout } from '@/components/layout/ChatLayout';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { WelcomeCard } from '@/components/chat/WelcomeCard';
 import { Button } from '@/components/ui/button';
 
+interface ChatMessage {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  tool_calls?: ToolCallRecord[];
+}
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
@@ -61,7 +69,9 @@ export default function ChatPage() {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current?.scrollIntoView) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleSendMessage = async (text: string) => {
@@ -71,7 +81,7 @@ export default function ChatPage() {
     setInputValue('');
 
     // Add user message to UI immediately
-    const userMessage = {
+    const userMessage: ChatMessage = {
       id: Date.now(),
       role: 'user',
       content: text,
@@ -88,28 +98,24 @@ export default function ChatPage() {
       });
 
       // Add assistant response
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: response.response,
-          tool_calls: response.tool_calls,
-          timestamp: new Date()
-        }
-      ]);
+      const assistantMessage: ChatMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: response.response,
+        tool_calls: response.tool_calls,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
       // Add error message
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
-          timestamp: new Date()
-        }
-      ]);
+      const errorMessage: ChatMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -235,6 +241,7 @@ export default function ChatPage() {
                   disabled={isLoading || !inputValue.trim()}
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  data-testid="send-button"
                 >
                   <Send className="w-4 h-4" />
                 </Button>

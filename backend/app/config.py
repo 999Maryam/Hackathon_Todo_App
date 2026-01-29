@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     """Logging level: DEBUG, INFO, WARNING, ERROR."""
 
+    # Phase V: Kafka/Redpanda Event Streaming
+    kafka_enabled: bool = False
+    """Enable Kafka event publishing (default: False)."""
+
+    kafka_bootstrap_servers: str = "localhost:9092"
+    """Kafka bootstrap servers (comma-separated)."""
+
+    redpanda_username: str = ""
+    """Redpanda Cloud SASL username (optional)."""
+
+    redpanda_password: str = ""
+    """Redpanda Cloud SASL password (optional)."""
+
     class Config:
         """Pydantic configuration."""
 

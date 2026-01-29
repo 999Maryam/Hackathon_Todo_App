@@ -465,6 +465,148 @@ When the backend is running:
 
 ---
 
+## Phase V: Advanced Features
+
+### New Task Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `priority` | `"low"` \| `"medium"` \| `"high"` | Task priority level |
+| `due_date` | ISO 8601 datetime | Task due date/time |
+| `tags` | Array of Tag objects | Associated tags |
+| `is_recurring` | boolean | Whether task recurs |
+| `recurring_config` | Object | Recurrence pattern (daily/weekly/monthly) |
+| `reminder` | Object | Reminder settings |
+
+### New API Endpoints
+
+**Tags:**
+```
+GET    /api/{user_id}/tags           - List all user tags
+POST   /api/{user_id}/tags           - Create a new tag
+PUT    /api/{user_id}/tags/{tag_id}  - Update a tag
+DELETE /api/{user_id}/tags/{tag_id}  - Delete a tag
+```
+
+**Reminders:**
+```
+GET    /api/{user_id}/tasks/{id}/reminder  - Get task reminder
+POST   /api/{user_id}/tasks/{id}/reminder  - Set task reminder
+DELETE /api/{user_id}/tasks/{id}/reminder  - Delete task reminder
+```
+
+### Task Query Parameters
+
+Filter, search, and sort tasks using query parameters:
+
+```bash
+# Search tasks
+GET /api/{user_id}/tasks?search=meeting
+
+# Filter by priority
+GET /api/{user_id}/tasks?priority=high&priority=medium
+
+# Filter by completion status
+GET /api/{user_id}/tasks?completed=false
+
+# Filter by due date range
+GET /api/{user_id}/tasks?due_from=2025-01-01&due_to=2025-01-31
+
+# Filter by tags
+GET /api/{user_id}/tasks?tag_ids=1&tag_ids=2
+
+# Sort tasks
+GET /api/{user_id}/tasks?sort_by=due_date&sort_order=asc
+GET /api/{user_id}/tasks?sort_by=priority&sort_order=desc
+```
+
+### Testing Phase V Features
+
+```bash
+# Test priority setting
+curl -X POST http://localhost:8000/api/{user_id}/tasks \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "High priority task", "priority": "high"}'
+
+# Test due date
+curl -X POST http://localhost:8000/api/{user_id}/tasks \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Task with deadline", "due_date": "2025-01-20T10:00:00"}'
+
+# Test tags - create tag
+curl -X POST http://localhost:8000/api/{user_id}/tags \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Work"}'
+
+# Test reminder
+curl -X POST http://localhost:8000/api/{user_id}/tasks/{task_id}/reminder \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"minutes_before": 60}'
+
+# Test recurring task
+curl -X POST http://localhost:8000/api/{user_id}/tasks \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Daily standup", "is_recurring": true, "recurring_frequency": "daily", "due_date": "2025-01-20T09:00:00"}'
+
+# Test search and filter
+curl "http://localhost:8000/api/{user_id}/tasks?search=meeting&priority=high&sort_by=due_date" \
+  -H "Authorization: Bearer {token}"
+```
+
+### MCP Tools (AI Agent)
+
+Extended MCP tools for natural language task management:
+
+| Tool | Description |
+|------|-------------|
+| `add_task` | Create task with priority, due_date, tag_ids |
+| `list_tasks` | List tasks with search, filter, sort |
+| `add_tag` | Create a new tag |
+| `list_tags` | List all user tags with counts |
+| `set_reminder` | Set reminder (minutes_before or exact time) |
+
+**Example AI Commands:**
+```
+"Add a high priority task 'Finish report' due tomorrow at 5pm"
+"Show me all tasks tagged with 'work' sorted by due date"
+"Set a reminder 1 hour before my meeting task"
+"Create a weekly recurring task for team standup"
+```
+
+### Kafka Events
+
+Task events are published to Kafka for downstream processing:
+
+| Event | Topic | Trigger |
+|-------|-------|---------|
+| `task_created` | task-events | New task created |
+| `task_updated` | task-events | Task properties changed |
+| `task_completed` | task-events | Task marked complete |
+| `task_deleted` | task-events | Task deleted |
+| `reminder_due` | reminders | Reminder time reached |
+
+**Event Schema Example:**
+```json
+{
+  "event_type": "task_created",
+  "task_id": "uuid-here",
+  "user_id": "user-123",
+  "task_data": {
+    "title": "Task title",
+    "priority": "high",
+    "due_date": "2025-01-20T10:00:00"
+  },
+  "timestamp": "2025-01-15T12:00:00"
+}
+```
+
+---
+
 ## Troubleshooting
 
 ### Port Already in Use

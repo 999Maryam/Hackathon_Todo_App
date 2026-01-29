@@ -1,0 +1,465 @@
+openapi: 3.0.3
+info:
+  title: Todo App Tasks API - Phase V Extensions
+  description: Extended task endpoints with priorities, due dates, search, filter, and sort
+  version: 5.0.0
+
+paths:
+  /api/{user_id}/tasks:
+    get:
+      summary: List tasks with advanced filtering and sorting
+      description: Returns tasks for the user with optional search, filter, and sort parameters
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search term for title/description (case-insensitive)
+          schema:
+            type: string
+        - name: priority
+          in: query
+          description: Filter by priority (comma-separated for multiple)
+          schema:
+            type: string
+            example: "high,medium"
+        - name: tags
+          in: query
+          description: Filter by tag IDs (comma-separated)
+          schema:
+            type: string
+            example: "1,2,3"
+        - name: completed
+          in: query
+          description: Filter by completion status
+          schema:
+            type: boolean
+        - name: due_from
+          in: query
+          description: Filter tasks due after this date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: due_to
+          in: query
+          description: Filter tasks due before this date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [created_at, due_date, priority, title]
+            default: created_at
+        - name: sort_order
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      summary: Create a new task with advanced fields
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/{user_id}/tasks/{task_id}:
+    put:
+      summary: Update task with advanced fields
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/{user_id}/tasks/{task_id}/tags:
+    post:
+      summary: Add tags to a task
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag_ids:
+                  type: array
+                  items:
+                    type: integer
+              required:
+                - tag_ids
+      responses:
+        '200':
+          description: Tags added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    delete:
+      summary: Remove tags from a task
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag_ids:
+                  type: array
+                  items:
+                    type: integer
+              required:
+                - tag_ids
+      responses:
+        '200':
+          description: Tags removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /api/{user_id}/tasks/{task_id}/reminder:
+    post:
+      summary: Set a reminder for a task
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remind_at:
+                  type: string
+                  format: date-time
+                  description: When to send the reminder
+              required:
+                - remind_at
+      responses:
+        '201':
+          description: Reminder set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          description: Task has no due date or reminder after due date
+
+    delete:
+      summary: Remove reminder from a task
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Reminder removed
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: string
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        priority:
+          type: string
+          enum: [high, medium, low]
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+        recurring_config:
+          $ref: '#/components/schemas/RecurringConfig'
+          nullable: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        reminder:
+          $ref: '#/components/schemas/Reminder'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TaskCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          enum: [high, medium, low]
+          default: medium
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+          default: false
+        recurring_frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+          description: Required if is_recurring is true
+        tag_ids:
+          type: array
+          items:
+            type: integer
+      required:
+        - title
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        priority:
+          type: string
+          enum: [high, medium, low]
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+        recurring_frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+
+    TaskListResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+
+    RecurringConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+        next_occurrence:
+          type: string
+          format: date-time
+
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: integer
+        task_id:
+          type: integer
+        remind_at:
+          type: string
+          format: date-time
+        sent:
+          type: boolean
+
+  responses:
+    Unauthorized:
+      description: Invalid or missing authentication token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Invalid authentication credentials"
+
+    Forbidden:
+      description: Access denied to this resource
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Access denied"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Task not found"
+
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string

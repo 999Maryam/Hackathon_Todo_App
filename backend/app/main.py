@@ -26,14 +26,33 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager.
 
     Handles startup and shutdown events.
+    Phase V: Added Kafka producer initialization.
     """
     # Startup
     logger.info("Starting up application...")
     create_db_and_tables()
     logger.info("Database tables created/verified")
+
+    # Phase V: Initialize Kafka producer
+    try:
+        from app.services.kafka_producer import init_kafka, shutdown_kafka
+        await init_kafka()
+        logger.info("Kafka producer initialized")
+    except Exception as e:
+        logger.warning(f"Kafka initialization skipped: {e}")
+
     yield
+
     # Shutdown
     logger.info("Shutting down application...")
+
+    # Phase V: Shutdown Kafka producer
+    try:
+        from app.services.kafka_producer import shutdown_kafka
+        await shutdown_kafka()
+        logger.info("Kafka producer shutdown complete")
+    except Exception as e:
+        logger.warning(f"Kafka shutdown error: {e}")
 
 
 def create_app() -> FastAPI:
@@ -64,6 +83,13 @@ def create_app() -> FastAPI:
 
     # Include routes
     app.include_router(router)
+
+    # Phase V: Include tags routes
+    try:
+        from app.api.tags import router as tags_router
+        app.include_router(tags_router)
+    except ImportError as e:
+        logger.warning(f"Could not import tags routes: {e}")
 
     # Include auth routes
     try:
