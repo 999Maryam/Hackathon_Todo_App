@@ -1,6 +1,8 @@
 /**
  * useTasks Hook - Task data fetching and management with SWR
  * Provides optimistic updates and cache management for tasks
+ *
+ * Phase V: Extended with search, filter, and sort parameters
  */
 
 'use client';
@@ -10,29 +12,58 @@ import { tasksApi } from '@/lib/api';
 import type { Task, TaskCreate, TaskUpdate } from '@/lib/types';
 import { toast } from 'sonner';
 
+/**
+ * Options for the useTasks hook
+ * Phase V: Added search, filter, and sort support
+ */
+interface UseTasksOptions {
+  search?: string;
+  priority?: string[];
+  completed?: boolean;
+  due_from?: string;
+  due_to?: string;
+  tag_ids?: number[];
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
 interface UseTasksReturn {
   tasks: Task[];
   isLoading: boolean;
   isError: boolean;
-  error: any;
+  error: Error | undefined;
   refresh: () => void;
   createTask: (data: TaskCreate) => Promise<Task | undefined>;
-  updateTask: (taskId: number, data: TaskUpdate) => Promise<Task | undefined>;
-  deleteTask: (taskId: number) => Promise<boolean>;
-  toggleComplete: (taskId: number) => Promise<Task | undefined>;
+  updateTask: (taskId: string | number, data: TaskUpdate) => Promise<Task | undefined>;
+  deleteTask: (taskId: string | number) => Promise<boolean>;
+  toggleComplete: (taskId: string | number) => Promise<Task | undefined>;
 }
 
 /**
  * Hook for managing tasks with SWR caching and optimistic updates
+ *
+ * Phase V: Extended with search, filter, and sort support
  */
-export function useTasks(userId: string | null): UseTasksReturn {
-  // Create unique SWR key
-  const swrKey = userId ? `/api/${userId}/tasks` : null;
+export function useTasks(
+  userId: string | null,
+  options?: UseTasksOptions
+): UseTasksReturn {
+  // Create unique SWR key including options for proper caching
+  const optionsKey = options
+    ? JSON.stringify({
+        search: options.search || '',
+        priority: options.priority || [],
+        completed: options.completed,
+        sort_by: options.sort_by || '',
+        sort_order: options.sort_order || 'desc',
+      })
+    : '';
+  const swrKey = userId ? `/api/${userId}/tasks?${optionsKey}` : null;
 
   // Fetcher function
   const fetcher = async () => {
     if (!userId) return { tasks: [], total: 0 };
-    const response = await tasksApi.list(userId);
+    const response = await tasksApi.list(userId, options);
     return response;
   };
 
@@ -60,14 +91,21 @@ export function useTasks(userId: string | null): UseTasksReturn {
     }
 
     try {
-      // Optimistic update - add temporary task
+      // Optimistic update - add temporary task with Phase V fields
       const tempTask: Task = {
-        id: Date.now(), // Temporary ID
+        id: String(Date.now()), // Temporary ID as string
         user_id: userId,
         title: taskData.title,
         description: taskData.description || null,
         is_completed: false,
         completed: false,
+        // Phase V fields
+        priority: taskData.priority || 'medium',
+        due_date: taskData.due_date || null,
+        is_recurring: taskData.is_recurring || false,
+        recurring_config: null,
+        tags: [],
+        reminder: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -91,10 +129,10 @@ export function useTasks(userId: string | null): UseTasksReturn {
 
       toast.success('Task created successfully');
       return newTask;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update on error
       mutate(swrKey);
-      const message = error.response?.detail || error.message || 'Failed to create task';
+      const message = error instanceof Error ? error.message : 'Failed to create task';
       toast.error(message);
       throw error;
     }
@@ -102,7 +140,7 @@ export function useTasks(userId: string | null): UseTasksReturn {
 
   // Update task with optimistic update
   const updateTask = async (
-    taskId: number,
+    taskId: string | number,
     taskData: TaskUpdate
   ): Promise<Task | undefined> => {
     if (!userId) {
@@ -138,17 +176,17 @@ export function useTasks(userId: string | null): UseTasksReturn {
 
       toast.success('Task updated successfully');
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update on error
       mutate(swrKey);
-      const message = error.response?.detail || error.message || 'Failed to update task';
+      const message = error instanceof Error ? error.message : 'Failed to update task';
       toast.error(message);
       throw error;
     }
   };
 
   // Delete task with optimistic update
-  const deleteTask = async (taskId: number): Promise<boolean> => {
+  const deleteTask = async (taskId: string | number): Promise<boolean> => {
     if (!userId) {
       toast.error('User not authenticated');
       return false;
@@ -167,17 +205,17 @@ export function useTasks(userId: string | null): UseTasksReturn {
 
       toast.success('Task deleted successfully');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update on error
       mutate(swrKey);
-      const message = error.response?.detail || error.message || 'Failed to delete task';
+      const message = error instanceof Error ? error.message : 'Failed to delete task';
       toast.error(message);
       return false;
     }
   };
 
   // Toggle task completion with optimistic update
-  const toggleComplete = async (taskId: number): Promise<Task | undefined> => {
+  const toggleComplete = async (taskId: string | number): Promise<Task | undefined> => {
     if (!userId) {
       toast.error('User not authenticated');
       return;
@@ -214,10 +252,10 @@ export function useTasks(userId: string | null): UseTasksReturn {
       toast.success(message);
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update on error
       mutate(swrKey);
-      const message = error.response?.detail || error.message || 'Failed to toggle task';
+      const message = error instanceof Error ? error.message : 'Failed to toggle task';
       toast.error(message);
       throw error;
     }

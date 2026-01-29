@@ -1,12 +1,15 @@
 /**
  * Validation schemas using Zod
  * Used with react-hook-form for type-safe form validation
+ *
+ * Phase V: Extended with priority and due_date validation
  */
 
 import { z } from 'zod';
 
 /**
  * Task form validation schema
+ * Phase V: Extended with priority, due_date, and tags fields
  */
 export const taskFormSchema = z.object({
   title: z
@@ -20,6 +23,22 @@ export const taskFormSchema = z.object({
     .trim()
     .optional()
     .or(z.literal('')),
+
+  // Phase V: Priority (US1)
+  priority: z.enum(['high', 'medium', 'low']).optional(),
+
+  // Phase V: Due Date (US2)
+  due_date: z.string().nullable().optional(),
+
+  // Phase V: Tags (US3)
+  tag_ids: z.array(z.number()).optional(),
+
+  // Phase V: Recurring (US7)
+  is_recurring: z.boolean().optional(),
+  recurring_frequency: z.enum(['daily', 'weekly', 'monthly']).nullable().optional(),
+
+  // Phase V: Reminder (US8)
+  reminder_minutes_before: z.number().positive().nullable().optional(),
 });
 
 /**

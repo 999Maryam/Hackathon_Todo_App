@@ -73,8 +73,8 @@ export function useAuth(): UseAuthReturn {
       const response = await authApi.login(data);
       setUser(response.user);
       toast.success('Welcome back!');
-    } catch (error: any) {
-      const message = error.response?.detail || error.message || 'Login failed';
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Login failed';
       toast.error(message);
       throw error;
     } finally {
@@ -89,8 +89,8 @@ export function useAuth(): UseAuthReturn {
       const response = await authApi.register(data);
       setUser(response.user);
       toast.success('Account created successfully!');
-    } catch (error: any) {
-      const message = error.response?.detail || error.message || 'Registration failed';
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
       toast.error(message);
       throw error;
     } finally {

@@ -1,0 +1,187 @@
+asyncapi: 2.6.0
+info:
+  title: Todo App Event Schemas - Phase V
+  description: Kafka event schemas for task lifecycle and reminders
+  version: 5.0.0
+
+channels:
+  task-events:
+    description: Task lifecycle events (create, update, complete, delete)
+    publish:
+      message:
+        $ref: '#/components/messages/TaskEvent'
+
+  reminders:
+    description: Reminder events for notification processing
+    publish:
+      message:
+        $ref: '#/components/messages/ReminderEvent'
+
+  task-updates:
+    description: Real-time task update notifications for connected clients
+    publish:
+      message:
+        $ref: '#/components/messages/TaskUpdateEvent'
+
+components:
+  messages:
+    TaskEvent:
+      name: TaskEvent
+      title: Task Lifecycle Event
+      description: Published when a task is created, updated, completed, or deleted
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaskEventPayload'
+
+    ReminderEvent:
+      name: ReminderEvent
+      title: Reminder Event
+      description: Published when a reminder time is reached
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ReminderEventPayload'
+
+    TaskUpdateEvent:
+      name: TaskUpdateEvent
+      title: Task Update Event
+      description: Published for real-time client synchronization
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TaskUpdateEventPayload'
+
+  schemas:
+    TaskEventPayload:
+      type: object
+      properties:
+        event_type:
+          type: string
+          enum:
+            - created
+            - updated
+            - completed
+            - deleted
+          description: Type of task operation
+        task_id:
+          type: integer
+          description: ID of the affected task
+        task_data:
+          type: object
+          description: Full task data at time of event
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            description:
+              type: string
+              nullable: true
+            completed:
+              type: boolean
+            priority:
+              type: string
+              enum: [high, medium, low]
+            due_date:
+              type: string
+              format: date-time
+              nullable: true
+            is_recurring:
+              type: boolean
+            tags:
+              type: array
+              items:
+                type: string
+        user_id:
+          type: string
+          description: ID of the user who owns the task
+        timestamp:
+          type: string
+          format: date-time
+          description: When the event occurred (ISO 8601)
+      required:
+        - event_type
+        - task_id
+        - task_data
+        - user_id
+        - timestamp
+      example:
+        event_type: "created"
+        task_id: 123
+        task_data:
+          id: 123
+          title: "Review PR"
+          description: "Review pull request #456"
+          completed: false
+          priority: "high"
+          due_date: "2026-01-27T17:00:00Z"
+          is_recurring: false
+          tags: ["Work", "Code Review"]
+        user_id: "user-uuid-123"
+        timestamp: "2026-01-26T10:30:00Z"
+
+    ReminderEventPayload:
+      type: object
+      properties:
+        task_id:
+          type: integer
+          description: ID of the task with the reminder
+        title:
+          type: string
+          description: Task title for notification display
+        due_at:
+          type: string
+          format: date-time
+          description: When the task is due
+        remind_at:
+          type: string
+          format: date-time
+          description: When the reminder was scheduled
+        user_id:
+          type: string
+          description: ID of the user to notify
+      required:
+        - task_id
+        - title
+        - due_at
+        - remind_at
+        - user_id
+      example:
+        task_id: 123
+        title: "Review PR"
+        due_at: "2026-01-27T17:00:00Z"
+        remind_at: "2026-01-27T16:00:00Z"
+        user_id: "user-uuid-123"
+
+    TaskUpdateEventPayload:
+      type: object
+      description: Lightweight event for real-time UI updates
+      properties:
+        event_type:
+          type: string
+          enum:
+            - created
+            - updated
+            - deleted
+        task_id:
+          type: integer
+        user_id:
+          type: string
+        changes:
+          type: object
+          description: Only the changed fields (for updates)
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - event_type
+        - task_id
+        - user_id
+        - timestamp
+      example:
+        event_type: "updated"
+        task_id: 123
+        user_id: "user-uuid-123"
+        changes:
+          completed: true
+          priority: "medium"
+        timestamp: "2026-01-26T10:35:00Z"

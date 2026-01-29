@@ -1,51 +1,46 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.0.0 → 2.0.0 (MAJOR)
+Version change: 2.0.0 → 2.1.0 (MINOR)
 
-Rationale: Complete governance restructuring from Phase II-specific to Global
-(Phases I–V) constitution. Backward-incompatible changes include expanded scope,
-new mandatory principles, and significantly broadened technology stack.
+Rationale: Phase V detailed specifications added. Expanded event-driven architecture,
+Dapr building blocks, Kafka topics, cloud provider options, and CI/CD pipeline details.
 
-Modified Principles:
-- "Spec-Driven Development (SDD)" → "Spec-Driven Development (SDD)" (retained, enhanced)
-- "Strict Separation of Concerns" → "Strict Separation of Concerns" (retained)
-- "Security by Design - Stateless JWT Authentication" → "Security First" (expanded scope)
-- "Multi-User Data Isolation" → merged into "Security First"
-- "Reliable Persistent Storage" → "Stateless & Resilient Design" (expanded)
-- "Modern, Responsive, and Maintainable Codebase" → split into multiple principles
+v2.1.0 Changes (2026-01-26):
+- Split Phase IV-V Technology Stack into separate sections
+- Added Cloud Provider Options table (DigitalOcean, GKE, Azure with free credits)
+- Added Kafka Service Options table (Redpanda Cloud recommended)
+- Added Phase V: Advanced Features section (Intermediate + Advanced features)
+- Added Phase V: Event-Driven Architecture section (Kafka topics, event schemas, architecture diagram)
+- Added Phase V: Dapr Building Blocks section (components, benefits, YAML examples)
+- Added Phase V: CI/CD Pipeline section (GitHub Actions workflow, required secrets)
+- Updated Phase V Success Criteria with Part A/B/C breakdown
+- Updated Event Topics with more detail
 
-Added Sections:
-- Core Principle III: Reusable Intelligence
-- Core Principle VI: Cloud-Native Mindset
-- Core Principle VII: AI-Native Focus
-- Core Principle VIII: Maintainability & Traceability
-- Phase-Specific Technology Stack (Phase I–V breakdown)
-- MCP Tools specification (Phase III+)
-- Event Topics specification (Phase V)
-- Database schema expansion (conversations, messages tables)
-- Bonus features section (Urdu, voice, reusable patterns)
-- Phase-based success criteria (100–300 pts per phase)
-
-Removed Sections:
-- Phase II-only API endpoints (replaced with phase-progressive API design)
-- Phase II-only success criteria (replaced with global success criteria)
+Previous v2.0.0 Changes (2026-01-12):
+- Complete governance restructuring from Phase II-specific to Global (Phases I–V)
+- Added Core Principles III, VI, VII, VIII
+- Added Phase-Specific Technology Stack
+- Added MCP Tools specification (Phase III+)
+- Added Event Topics specification (Phase V)
+- Added Phase-based success criteria (100–300 pts per phase)
 
 Templates Requiring Updates:
 - ✅ plan-template.md (Constitution Check section aligned)
 - ✅ spec-template.md (Requirements section aligned)
 - ✅ tasks-template.md (Phase structure aligned)
-- ⚠ CLAUDE.md (needs reference update to v2.0.0 - manual follow-up)
+- ✅ CLAUDE.md (updated to reference constitution v2.1.0)
 
 Follow-up TODOs:
-- TODO(RATIFICATION_DATE): Original adoption date retained from v1.0.0 (2026-01-08)
-- Update root CLAUDE.md to reference constitution v2.0.0
+- Create specs/011-phase-v-advanced-features/ for Part A
+- Create specs/012-dapr-kafka-integration/ for event-driven architecture
+- Create specs/013-cloud-deployment/ for Part C
 -->
 
 # Hackathon II – Todo App Global Constitution
 
 **Project**: The Evolution of Todo: From Console to Cloud-Native AI Chatbot
-**Version**: 2.0.0 | **Ratified**: 2026-01-08 | **Last Amended**: 2026-01-12
+**Version**: 2.1.0 | **Ratified**: 2026-01-08 | **Last Amended**: 2026-01-26
 
 > This is the **single global constitution** for the entire hackathon.
 > All previous phase-specific constitutions are superseded by this version.
@@ -124,6 +119,21 @@ No in-memory state. Persist everything in Neon PostgreSQL:
 - `tasks` (user_id FK)
 - `conversations` (user_id FK) — Phase III+
 - `messages` (user_id FK, conversation_id FK) — Phase III+
+
+**Phase V Extended Tables:**
+- `tags` (id, name, user_id FK) — User-defined tags
+- `task_tags` (task_id FK, tag_id FK) — Many-to-many relationship
+- `reminders` (id, task_id FK, remind_at, sent) — Scheduled reminders
+- `recurring_configs` (id, task_id FK, frequency, next_occurrence) — Recurring task settings
+- `audit_logs` (id, task_id, event_type, user_id, timestamp, data) — Event history
+
+**Phase V Task Table Extensions:**
+```sql
+ALTER TABLE tasks ADD COLUMN priority VARCHAR(10) DEFAULT 'medium';  -- high, medium, low
+ALTER TABLE tasks ADD COLUMN due_date TIMESTAMP;
+ALTER TABLE tasks ADD COLUMN is_recurring BOOLEAN DEFAULT FALSE;
+ALTER TABLE tasks ADD COLUMN recurring_config_id INTEGER REFERENCES recurring_configs(id);
+```
 
 **Resilience Requirements:**
 - Application MUST survive restarts without data loss
@@ -216,7 +226,7 @@ specs/
 | Chat UI | OpenAI ChatKit |
 | API Pattern | Single stateless `/api/{user_id}/chat` endpoint |
 
-### Phase IV–V: Cloud Native
+### Phase IV: Local Kubernetes
 
 | Layer | Technology |
 |-------|------------|
@@ -224,8 +234,32 @@ specs/
 | Local Orchestration | Minikube |
 | Deployment | Helm charts |
 | AI Operations | kubectl-ai / kagent |
-| Event Streaming | Kafka (or Redpanda) |
-| Microservices | Dapr (Pub/Sub, State, Jobs, Secrets, Service Invocation) |
+
+### Phase V: Advanced Cloud Deployment
+
+| Layer | Technology |
+|-------|------------|
+| Event Streaming | Kafka / Redpanda Cloud (Serverless - FREE tier) |
+| Distributed Runtime | Dapr (Pub/Sub, State, Bindings, Secrets, Service Invocation) |
+| Cloud Providers | DigitalOcean DOKS / Google GKE / Azure AKS |
+| CI/CD | GitHub Actions |
+| Monitoring | Cloud-native logging and metrics |
+
+#### Cloud Provider Options
+
+| Provider | Free Credit | Time Limit | Signup |
+|----------|-------------|------------|--------|
+| DigitalOcean (DOKS) | $200 | 60 days | digitalocean.com |
+| Google Cloud (GKE) | $300 | 90 days | cloud.google.com/free |
+| Azure (AKS) | $200 | 30 days | azure.microsoft.com/free |
+
+#### Kafka Service Options
+
+| Service | Free Tier | Recommendation |
+|---------|-----------|----------------|
+| **Redpanda Cloud** | Serverless FREE | ⭐ RECOMMENDED - No Zookeeper, Kafka-compatible |
+| Confluent Cloud | $400 credit/30 days | Industry standard |
+| Self-hosted (Strimzi) | Free (compute cost only) | Learning experience |
 
 ---
 
@@ -257,9 +291,165 @@ All endpoints MUST:
 ### Phase V: Event Topics
 
 ```
-task-events      # Task lifecycle events
+task-events      # Task lifecycle events (CRUD operations)
 reminders        # Scheduled reminder events
 task-updates     # Real-time task change notifications
+```
+
+---
+
+## Phase V: Advanced Features (Mandatory)
+
+### Intermediate Features
+
+| Feature | Description |
+|---------|-------------|
+| **Priorities** | Task priority levels (High, Medium, Low) |
+| **Tags** | Custom tags for task categorization |
+| **Search** | Full-text search across tasks |
+| **Filter** | Filter tasks by priority, tag, status, due date |
+| **Sort** | Sort tasks by date, priority, name |
+
+### Advanced Features
+
+| Feature | Description |
+|---------|-------------|
+| **Recurring Tasks** | Tasks that repeat (daily, weekly, monthly) |
+| **Due Dates** | Task deadlines with date/time |
+| **Reminders** | Notifications before due dates |
+
+---
+
+## Phase V: Event-Driven Architecture
+
+### Kafka Topics & Use Cases
+
+| Topic | Producer | Consumer | Purpose |
+|-------|----------|----------|---------|
+| `task-events` | Chat API (MCP Tools) | Recurring Task Service, Audit Service | All task CRUD operations |
+| `reminders` | Chat API (when due date set) | Notification Service | Scheduled reminder triggers |
+| `task-updates` | Chat API | WebSocket Service | Real-time client sync |
+
+### Event Schemas
+
+**Task Event:**
+```json
+{
+  "event_type": "created|updated|completed|deleted",
+  "task_id": 123,
+  "task_data": { "title": "...", "priority": "high", ... },
+  "user_id": "user-uuid",
+  "timestamp": "2026-01-26T12:00:00Z"
+}
+```
+
+**Reminder Event:**
+```json
+{
+  "task_id": 123,
+  "title": "Task title",
+  "due_at": "2026-01-27T09:00:00Z",
+  "remind_at": "2026-01-27T08:00:00Z",
+  "user_id": "user-uuid"
+}
+```
+
+### Microservices Architecture (Phase V)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    KUBERNETES CLUSTER                               │
+│                                                                     │
+│  ┌──────────┐    ┌──────────┐    ┌─────────────┐                   │
+│  │ Frontend │───▶│ Backend  │───▶│   KAFKA     │                   │
+│  │ + Dapr   │    │ + Dapr   │    │ (Redpanda)  │                   │
+│  └──────────┘    └────┬─────┘    └──────┬──────┘                   │
+│                       │                  │                          │
+│                       ▼                  ▼                          │
+│                 ┌──────────┐    ┌────────────────┐                  │
+│                 │ Neon DB  │    │ Notification   │                  │
+│                 │(External)│    │ Service + Dapr │                  │
+│                 └──────────┘    └────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Phase V: Dapr Building Blocks
+
+### Required Dapr Components
+
+| Building Block | Component Type | Purpose |
+|----------------|----------------|---------|
+| **Pub/Sub** | `pubsub.kafka` | Kafka abstraction - no Kafka library needed |
+| **State Management** | `state.postgresql` | Conversation state, task cache |
+| **Service Invocation** | Built-in | Frontend ↔ Backend with retries, mTLS |
+| **Bindings (Cron)** | `bindings.cron` | Scheduled reminder checks |
+| **Secrets** | `secretstores.kubernetes` | API keys, DB credentials |
+
+### Dapr Benefits
+
+| Without Dapr | With Dapr |
+|--------------|-----------|
+| Import Kafka, Redis, Postgres libraries | Single HTTP API for all |
+| Connection strings in code | Dapr components (YAML config) |
+| Manual retry logic | Built-in retries, circuit breakers |
+| Service URLs hardcoded | Automatic service discovery |
+| Secrets in env vars | Secure secret store integration |
+| Vendor lock-in | Swap Kafka for RabbitMQ with config change |
+
+### Dapr Component Examples
+
+**Pub/Sub (Kafka):**
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "redpanda:9092"
+```
+
+**Cron Binding (Reminders):**
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: reminder-cron
+spec:
+  type: bindings.cron
+  version: v1
+  metadata:
+    - name: schedule
+      value: "*/5 * * * *"  # Every 5 minutes
+```
+
+---
+
+## Phase V: CI/CD Pipeline
+
+### GitHub Actions Workflow
+
+| Stage | Action |
+|-------|--------|
+| **Build** | Build Docker images for all services |
+| **Test** | Run unit and integration tests |
+| **Push** | Push images to container registry |
+| **Deploy** | Deploy to Kubernetes via Helm |
+
+### Required Secrets (GitHub)
+
+```
+DOCKER_USERNAME
+DOCKER_PASSWORD
+KUBE_CONFIG (base64 encoded)
+REDPANDA_BOOTSTRAP_SERVERS
+REDPANDA_USERNAME
+REDPANDA_PASSWORD
 ```
 
 ---
@@ -365,11 +555,23 @@ Configure OpenAI ChatKit domain key for production URL.
 
 ### Phase V: Event-Driven Architecture (300 points)
 
-- [ ] Advanced features: priorities, tags, search, sort, recurring, due-dates, reminders
-- [ ] Kafka/Dapr event-driven architecture
-- [ ] Cloud deployment (DOKS/AKS/GKE)
-- [ ] CI/CD via GitHub Actions
-- [ ] Monitoring and logging infrastructure
+**Part A: Advanced Features**
+- [ ] Intermediate features: Priorities, Tags, Search, Filter, Sort
+- [ ] Advanced features: Recurring Tasks, Due Dates, Reminders
+- [ ] Event-driven architecture with Kafka/Redpanda
+- [ ] Dapr integration for distributed runtime
+
+**Part B: Local Deployment (Minikube)**
+- [ ] Dapr deployed on Minikube
+- [ ] Full Dapr: Pub/Sub, State, Bindings (cron), Secrets, Service Invocation
+- [ ] Redpanda/Kafka running locally or connected to cloud
+
+**Part C: Cloud Deployment**
+- [ ] Deployed to DigitalOcean (DOKS) / Google Cloud (GKE) / Azure (AKS)
+- [ ] Dapr on cloud with full building blocks
+- [ ] Kafka on Redpanda Cloud (Serverless)
+- [ ] CI/CD pipeline via GitHub Actions
+- [ ] Monitoring and logging infrastructure configured
 
 ### Bonus Points
 

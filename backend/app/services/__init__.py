@@ -8,6 +8,8 @@ from app.services.conversation_service import (
     add_assistant_message,
     get_conversation_history,
 )
+from app.services.task_service import TaskService
+from app.services.tag_service import TagService
 
 __all__ = [
     "create_conversation",
@@ -16,4 +18,6 @@ __all__ = [
     "add_user_message",
     "add_assistant_message",
     "get_conversation_history",
+    "TaskService",
+    "TagService",
 ]

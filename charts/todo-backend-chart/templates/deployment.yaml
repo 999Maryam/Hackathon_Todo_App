@@ -29,11 +29,17 @@ spec:
               protocol: TCP
           env:
             - name: DATABASE_URL
-              value: {{ .Values.env.DATABASE_URL | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.databaseUrl.secretName | default "todo-backend-secrets" }}
+                  key: {{ .Values.secrets.databaseUrl.secretKey | default "DATABASE_URL" }}
             - name: ENVIRONMENT
               value: {{ .Values.env.ENVIRONMENT | quote }}
             - name: BETTER_AUTH_SECRET
-              value: {{ .Values.env.BETTER_AUTH_SECRET | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.authSecret.secretName | default "todo-backend-secrets" }}
+                  key: {{ .Values.secrets.authSecret.secretKey | default "BETTER_AUTH_SECRET" }}
             - name: OPENROUTER_API_KEY
               valueFrom:
                 secretKeyRef:

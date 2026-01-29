@@ -1,6 +1,8 @@
 /**
  * Task Item Component
  * Individual task card with checkbox, title, description, and action buttons
+ *
+ * Phase V: Extended with Priority Badge, Due Date Badge, Tags, and Recurring Badge
  */
 
 'use client';
@@ -11,12 +13,18 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import type { Task } from '@/lib/types';
 import { triggerTaskCompletionConfetti } from '@/lib/confetti';
+import { PriorityBadge } from './PriorityBadge';
+import { DueDateBadge } from './DueDateBadge';
+import { TagList } from '@/components/tags/TagBadge';
+import { RecurringBadge } from './RecurringBadge';
+import type { RecurringFrequency } from './RecurringSelect';
+import { ReminderBadge } from './ReminderPicker';
 
 interface TaskItemProps {
   task: Task;
-  onToggleComplete?: (taskId: number) => void;
+  onToggleComplete?: (taskId: string | number) => void;
   onEdit?: (task: Task) => void;
-  onDelete?: (taskId: number) => void;
+  onDelete?: (taskId: string | number) => void;
 }
 
 export function TaskItem({
@@ -48,16 +56,22 @@ export function TaskItem({
 
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-1">
-          {/* Title */}
-          <h3
-            className={`text-base sm:text-lg font-semibold transition-all duration-200 ${
-              isCompleted
-                ? 'line-through text-muted-foreground'
-                : 'text-gray-900 dark:text-gray-100'
-            }`}
-          >
-            {task.title}
-          </h3>
+          {/* Title Row with Priority Badge */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3
+              className={`text-base sm:text-lg font-semibold transition-all duration-200 ${
+                isCompleted
+                  ? 'line-through text-muted-foreground'
+                  : 'text-gray-900 dark:text-gray-100'
+              }`}
+            >
+              {task.title}
+            </h3>
+            {/* Phase V: Priority Badge (US1) */}
+            {task.priority && (
+              <PriorityBadge priority={task.priority} size="sm" />
+            )}
+          </div>
 
           {/* Description */}
           {task.description && (
@@ -72,14 +86,43 @@ export function TaskItem({
             </p>
           )}
 
-          {/* Metadata */}
-          <p className="text-xs text-muted-foreground">
-            {new Date(task.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-          </p>
+          {/* Metadata Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Phase V: Due Date Badge (US2) */}
+            {task.due_date && (
+              <DueDateBadge
+                dueDate={task.due_date}
+                completed={isCompleted}
+                size="sm"
+              />
+            )}
+            {/* Phase V: Recurring Badge (US7 - T092) */}
+            {task.is_recurring && task.recurring_config?.frequency && (
+              <RecurringBadge
+                frequency={task.recurring_config.frequency as RecurringFrequency}
+              />
+            )}
+            {/* Phase V: Reminder Badge (US8 - T100) */}
+            {task.reminder && !task.reminder.sent && task.due_date && (
+              <ReminderBadge
+                minutesBefore={Math.round(
+                  (new Date(task.due_date).getTime() - new Date(task.reminder.remind_at).getTime()) / 60000
+                )}
+              />
+            )}
+            {/* Phase V: Tags (US3) */}
+            {task.tags && task.tags.length > 0 && (
+              <TagList tags={task.tags} maxVisible={3} size="sm" />
+            )}
+            {/* Created date */}
+            <p className="text-xs text-muted-foreground">
+              {new Date(task.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons - Always visible */}

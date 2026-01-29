@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
@@ -23,14 +23,20 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+// Hook to check if component is mounted (client-side)
+const emptySubscribe = () => () => {};
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 // Theme Toggle Button Component
 function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { setTheme, resolvedTheme } = useTheme();
+  const mounted = useIsMounted();
 
   if (!mounted) {
     return (
@@ -306,12 +312,6 @@ function FeatureCard({
 
 // Main Page Component
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const features = [
     {
       icon: Layout,

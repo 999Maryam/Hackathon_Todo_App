@@ -61,16 +61,6 @@ View logs:
 Configuration:
 -------------
 Environment: {{ .Values.env.ENVIRONMENT }}
-Database URL: {{ if .Values.env.DATABASE_URL }}configured{{ else }}NOT SET - Please configure!{{ end }}
-Better Auth Secret: {{ if .Values.env.BETTER_AUTH_SECRET }}configured{{ else }}NOT SET - Please configure!{{ end }}
+Database URL: Using secret {{ .Values.secrets.databaseUrl.secretName }}
+Better Auth Secret: Using secret {{ .Values.secrets.authSecret.secretName }}
 OpenRouter API Key: Using secret {{ .Values.secrets.openRouterApiKey.secretName }}
-
-{{ if not .Values.env.DATABASE_URL }}
-WARNING: DATABASE_URL is not set! The application may fail to start.
-Please update your values and upgrade the release.
-{{ end }}
-
-{{ if not .Values.env.BETTER_AUTH_SECRET }}
-WARNING: BETTER_AUTH_SECRET is not set! The application may fail to start.
-Please update your values and upgrade the release.
-{{ end }}

@@ -13,6 +13,10 @@ from pathlib import Path
 # Add parent directory to path so we can import app modules
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+# Load .env file for local development
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 from app.models import SQLModel
 
 # this is the Alembic Config object, which provides
