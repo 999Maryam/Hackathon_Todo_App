@@ -260,6 +260,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - N/A (applications use external Neon PostgreSQL) (010-minikube-deploy)
 - Python 3.13+ (Backend), TypeScript 5.0+ (Frontend) + FastAPI, SQLModel, aiokafka (Kafka client), Next.js 16+, Tailwind CSS (011-advanced-features)
 - Neon Serverless PostgreSQL (existing), Kafka/Redpanda (new) (011-advanced-features)
+- N/A (Infrastructure/Deployment Configuration) + Dapr (v1.13+), Redpanda (single-node Docker), Kafka protocol, Helm charts, Minikube (012-dapr-kafka-setup)
+- Neon Serverless PostgreSQL (external) accessed via Dapr state management (012-dapr-kafka-setup)
 
 ## Recent Changes
 - 001-todo-frontend-ui: Added TypeScript 5.0+, Next.js 16+ with App Router + Next.js, React, Tailwind CSS, Better Auth, SWR, React Hook Form, react-hot-toast
