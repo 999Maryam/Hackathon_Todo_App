@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      labels:
+        app: redpanda
+    spec:
+      containers:
+      - name: redpanda
+        image: docker.redpanda.com/redpandadata/redpanda:v23.2.15
+        ports:
+        - containerPort: 9092
+        - containerPort: 8081
+        - containerPort: 8082
+        command:
+        - rpk
+        args:
+        - redpanda
+        - start
+        - --mode=dev-container
+        - --kafka-addr=0.0.0.0:9092
+        - --advertise-kafka-addr=redpanda:9092

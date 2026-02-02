@@ -1,0 +1,112 @@
+openapi: 3.0.1
+info:
+  title: Dapr PubSub API for Todo App
+  description: API contracts for publishing and subscribing to events via Dapr pubsub building block
+  version: 1.0.0
+servers:
+  - url: http://localhost:3500
+    description: Dapr sidecar endpoint
+paths:
+  /v1.0/publish/pubsub-kafka/{topic}:
+    post:
+      summary: Publish an event to a Kafka topic via Dapr
+      description: Publishes an event to the specified Kafka topic using Dapr's pubsub building block
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          description: The Kafka topic to publish to (task-events, reminders, task-updates)
+          schema:
+            type: string
+            enum: [task-events, reminders, task-updates]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventPayload'
+      responses:
+        '200':
+          description: Event published successfully
+        '400':
+          description: Invalid request or topic
+        '500':
+          description: Internal server error
+  /v1.0/topics/{topic}:
+    get:
+      summary: Subscribe to events from a Kafka topic via Dapr
+      description: Subscribes to events from the specified Kafka topic using Dapr's pubsub building block
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          description: The Kafka topic to subscribe to
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully subscribed to topic
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventPayload'
+        '400':
+          description: Invalid topic
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    EventPayload:
+      type: object
+      required:
+        - event_type
+        - task_id
+        - user_id
+        - timestamp
+      properties:
+        event_type:
+          type: string
+          description: The type of event (created, updated, completed, deleted)
+          enum: [created, updated, completed, deleted, reminder]
+        task_id:
+          type: integer
+          description: The ID of the task associated with this event
+        task_data:
+          $ref: '#/components/schemas/TaskData'
+        user_id:
+          type: string
+          description: The ID of the user who triggered this event
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the event occurred
+    TaskData:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the task
+        description:
+          type: string
+          description: The description of the task
+        completed:
+          type: boolean
+          description: Whether the task is completed
+        priority:
+          type: string
+          description: The priority of the task
+          enum: [high, medium, low]
+        due_date:
+          type: string
+          format: date-time
+          description: The due date of the task
+        is_recurring:
+          type: boolean
+          description: Whether the task is recurring
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the task

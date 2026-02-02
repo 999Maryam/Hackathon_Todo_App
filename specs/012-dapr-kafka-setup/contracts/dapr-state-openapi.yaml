@@ -1,0 +1,148 @@
+openapi: 3.0.1
+info:
+  title: Dapr State Management API for Todo App
+  description: API contracts for state management via Dapr state building block
+  version: 1.0.0
+servers:
+  - url: http://localhost:3500
+    description: Dapr sidecar endpoint
+paths:
+  /v1.0/state/statestore-postgresql/{key}:
+    get:
+      summary: Get state value by key
+      description: Retrieves a state value from the PostgreSQL state store using Dapr
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: The key for the state value
+          schema:
+            type: string
+      responses:
+        '200':
+          description: State value retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateValue'
+        '404':
+          description: State value not found
+        '500':
+          description: Internal server error
+    post:
+      summary: Save state value
+      description: Saves a state value to the PostgreSQL state store using Dapr
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: The key for the state value
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StateOperation'
+      responses:
+        '200':
+          description: State value saved successfully
+        '500':
+          description: Internal server error
+  /v1.0/state/statestore-postgresql:
+    post:
+      summary: Bulk state operations
+      description: Performs bulk operations on the PostgreSQL state store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/StateOperation'
+      responses:
+        '200':
+          description: Bulk operations completed successfully
+        '500':
+          description: Internal server error
+    put:
+      summary: Transactional state operations
+      description: Performs transactional operations on the PostgreSQL state store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionalStateRequest'
+      responses:
+        '200':
+          description: Transaction completed successfully
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    StateValue:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The stored value (JSON string)
+        version:
+          type: string
+          description: The version of the stored value
+        etag:
+          type: string
+          description: The ETag of the stored value
+    StateOperation:
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          type: string
+          description: The key for the state value
+        value:
+          type: string
+          description: The value to store (JSON string)
+        operationType:
+          type: string
+          description: The type of operation
+          enum: [upsert, delete]
+        metadata:
+          type: object
+          description: Additional metadata for the operation
+    TransactionalStateRequest:
+      type: object
+      required:
+        - operations
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionalStateOperation'
+    TransactionalStateOperation:
+      type: object
+      required:
+        - operationType
+        - request
+      properties:
+        operationType:
+          type: string
+          enum: [upsert, delete]
+        request:
+          type: object
+          required:
+            - key
+          properties:
+            key:
+              type: string
+              description: The key for the state value
+            value:
+              type: string
+              description: The value to store (JSON string)
+            metadata:
+              type: object
+              description: Additional metadata for the operation
