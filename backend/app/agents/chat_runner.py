@@ -47,12 +47,19 @@ async def run_agent_with_tools(
     # Create agent
     agent = create_agent()
 
-    # Prepare conversation history for the model
-    # Convert the conversation history to a format suitable for the Gemini API
+    # Prepare conversation history for the model (OpenAI-compatible format)
+    # Only include messages with valid roles and non-empty content
     chat_history = []
     for msg in history:
-        role = "user" if msg["role"] == "user" else "model"
-        chat_history.append({"role": role, "parts": [msg["content"]]})
+        role = msg.get("role", "")
+        content = msg.get("content", "")
+        if not content or not content.strip():
+            continue
+        # Map to OpenAI-compatible roles (user/assistant only)
+        if role == "user":
+            chat_history.append({"role": "user", "content": content})
+        else:
+            chat_history.append({"role": "assistant", "content": content})
 
     # Create a chat session with the history
     chat = agent.start_chat(history=chat_history)

@@ -76,9 +76,13 @@ class OpenRouterChat:
         # Add user message to history
         self.history.append({"role": "user", "content": message})
 
-        # Prepare messages for API call
+        # Prepare messages for API call - filter to valid roles only
+        MAX_HISTORY = 10
+        recent_history = self.history[-MAX_HISTORY:] if len(self.history) > MAX_HISTORY else self.history
         messages = [{"role": "system", "content": self.model.system_prompt}]
-        messages.extend(self.history)
+        for msg in recent_history:
+            if msg.get("role") in ("user", "assistant") and msg.get("content"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
 
         # Error response class for failures
         class ErrorResponse:
