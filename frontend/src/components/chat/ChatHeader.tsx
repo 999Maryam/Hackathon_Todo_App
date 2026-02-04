@@ -1,6 +1,7 @@
 'use client';
 
 import { Bot, Trash2, MoreVertical } from 'lucide-react';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +28,8 @@ export function ChatHeader({ onClearChat }: ChatHeaderProps) {
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-xl">
@@ -43,6 +46,7 @@ export function ChatHeader({ onClearChat }: ChatHeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </header>
   );

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { UserPlus, Loader2 } from 'lucide-react';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,11 +57,15 @@ export default function SignUpPage() {
   };
 
   return (
-    <AuthWrapper
-      title="Get Started"
-      description="Create your account to start organizing"
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <>
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+      <AuthWrapper
+        title="Get Started"
+        description="Create your account to start organizing"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Name Field */}
         <div className="space-y-2">
           <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -178,6 +183,7 @@ export default function SignUpPage() {
           </Link>
         </div>
       </form>
-    </AuthWrapper>
+      </AuthWrapper>
+    </>
   );
 }
