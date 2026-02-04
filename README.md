@@ -1,3 +1,13 @@
+---
+title: Todo AI Chatbot
+emoji: ✅
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_file: backend/app/main.py
+pinned: false
+---
+
 # Todo AI Chatbot
 
 A full-stack Todo application with AI-powered chatbot capabilities.
