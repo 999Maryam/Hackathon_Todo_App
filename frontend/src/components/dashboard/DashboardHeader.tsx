@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User, CheckSquare, MessageCircle } from 'lucide-react';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 
 /**
  * Get user initials from name
@@ -53,7 +54,9 @@ export function DashboardHeader() {
             </h1>
           </div>
 
-          {/* User Menu */}
+          {/* Theme Toggle & User Menu */}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -98,6 +101,7 @@ export function DashboardHeader() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </div>
     </header>
